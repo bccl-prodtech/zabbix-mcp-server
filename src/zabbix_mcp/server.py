@@ -1790,13 +1790,14 @@ def _register_tools(
     # Build a set of known read-only API methods from tool definitions.
     _KNOWN_READ_ONLY = {m.api_method.lower() for m in ALL_METHODS if m.read_only}
 
-    # Fallback suffix whitelist for methods not in ALL_METHODS.
+    # Fallback suffix whitelist for methods not in ALL_METHODS. ".test" is
+    # not on it: mediatype.test sends a real message through the media
+    # type. userdirectory.test stays read-only through its MethodDef.
     _READ_ONLY_SUFFIXES = (
         ".get",
         ".getscriptsbyevents", ".getscriptsbyhosts",
         ".export", ".importcompare",
         ".checkauthentication",
-        ".test",
     )
 
     async def zabbix_raw_api_call(

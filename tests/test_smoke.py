@@ -259,6 +259,24 @@ class TestToolRegistration(unittest.TestCase):
             self.assertIn("properties", tool.parameters)
 
 
+class TestRawApiCallReadOnly(unittest.TestCase):
+    def test_mediatype_test_is_refused_on_read_only_server(self):
+        """mediatype.test sends a real message; the suffix fallback must not call it a read."""
+        from unittest.mock import patch
+        from mcp.server.mcpserver import MCPServer
+        from mcp.server.mcpserver.exceptions import ToolError
+
+        mgr = ClientManager(_make_config())  # server "test" is read_only by default
+        mcp = MCPServer(name="test")
+        _register_tools(mcp, mgr)
+        raw_call = mcp._tool_manager.get_tool("zabbix_raw_api_call").fn
+        with patch.object(mgr, "call", return_value=True) as call:
+            with self.assertRaises(ToolError) as ctx:
+                asyncio.run(raw_call(method="mediatype.test", params={"mediatypeid": "1"}))
+        self.assertIn("read-only", str(ctx.exception))
+        call.assert_not_called()
+
+
 class TestImportRulesNormalization(unittest.TestCase):
     def test_snake_to_camel_basic(self):
         self.assertEqual(_snake_to_camel("discovery_rules"), "discoveryRules")
