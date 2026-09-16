@@ -273,6 +273,58 @@ class TestRawApiCallReadOnly(unittest.TestCase):
         with patch.object(mgr, "call", return_value=True) as call:
             with self.assertRaises(ToolError) as ctx:
                 asyncio.run(raw_call(method="mediatype.test", params={"mediatypeid": "1"}))
+class TestActionConfirmRecheck(unittest.TestCase):
+    """action_confirm checks authorization itself; a prepare is not a five-minute pass."""
+
+    def _tools(self):
+        from mcp.server.mcpserver import MCPServer
+
+        cfg = AppConfig(
+            server=ServerConfig(),
+            zabbix_servers={"test": ZabbixServerConfig(
+                name="test", url="http://localhost", api_token="dummy", read_only=False,
+            )},
+        )
+        mgr = ClientManager(cfg)
+        mcp = MCPServer(name="test")
+        _register_tools(mcp, mgr)
+        tm = mcp._tool_manager
+        return cfg, mgr, tm.get_tool("action_prepare").fn, tm.get_tool("action_confirm").fn
+
+    def test_server_turned_read_only_after_prepare(self):
+        import json
+        from dataclasses import replace
+        from unittest.mock import patch
+        from mcp.server.mcpserver.exceptions import ToolError
+
+        cfg, mgr, prepare, confirm = self._tools()
+        prepared = json.loads(asyncio.run(prepare(action="host.update", params={"hostid": "1"})))
+        ro = replace(cfg.zabbix_servers["test"], read_only=True)
+        mgr._config = replace(cfg, zabbix_servers={"test": ro})
+        with patch.object(mgr, "call", return_value={"hostids": ["1"]}) as call:
+            with self.assertRaises(ToolError) as ctx:
+                asyncio.run(confirm(confirmation_token=prepared["confirmation_token"]))
+        self.assertIn("read-only", str(ctx.exception))
+        call.assert_not_called()
+
+    def test_token_turned_read_only_after_prepare(self):
+        import json
+        from unittest.mock import patch
+        from mcp.server.mcpserver.exceptions import ToolError
+        from zabbix_mcp.token_store import TokenInfo, current_token_info
+
+        cfg, mgr, prepare, confirm = self._tools()
+        rw = TokenInfo(id="ops", name="ops", token_hash="sha256:x", read_only=False)
+        ro = TokenInfo(id="ops", name="ops", token_hash="sha256:x", read_only=True)
+        outer = current_token_info.set(rw)
+        try:
+            prepared = json.loads(asyncio.run(prepare(action="host.update", params={"hostid": "1"})))
+            current_token_info.set(ro)
+            with patch.object(mgr, "call", return_value={"hostids": ["1"]}) as call:
+                with self.assertRaises(ToolError) as ctx:
+                    asyncio.run(confirm(confirmation_token=prepared["confirmation_token"]))
+        finally:
+            current_token_info.reset(outer)
         self.assertIn("read-only", str(ctx.exception))
         call.assert_not_called()
 

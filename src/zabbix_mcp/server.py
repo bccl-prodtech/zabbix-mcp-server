@@ -2637,6 +2637,19 @@ def _register_tools(
         if action_data["expires"] < time.time():
             raise ToolError("Confirmation token has expired. Prepare the action again.")
 
+        # Check authorization again here, not only in action_prepare: the
+        # token's read_only flag or the server's may have changed in the
+        # five minutes between the two calls, and this is the call that
+        # writes.
+        _prefix = action_data["action"].split(".")[0].lower() if "." in action_data["action"] else ""
+        _auth_err = check_token_authorization(action_data["server"], tool_prefix=_prefix, is_write=True)
+        if _auth_err:
+            raise ToolError(_auth_err)
+        try:
+            client_manager.check_write(action_data["server"])
+        except ReadOnlyError as e:
+            raise ToolError(str(e))
+
         try:
             result = await asyncio.to_thread(
                 client_manager.call, action_data["server"],
