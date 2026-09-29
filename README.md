@@ -910,10 +910,15 @@ The `report_generate` tool produces professional PDF reports from Zabbix data. R
 PDF generation requires two extra Python packages. The installer pulls them in automatically when the optional `[reporting]` extra is selected; for manual installs:
 
 ```bash
-pip install zabbix-mcp-server[reporting]
-# or
+# zabbix-mcp-server is not published on PyPI - install from a checkout
+pip install "/path/to/zabbix-mcp-server[reporting]"
+# or add the extras to an existing install
 pip install weasyprint jinja2
 ```
+
+weasyprint also needs system libraries (Pango, GDK-PixBuf). If the Python
+package is present but those libraries are not, the server logs a warning and
+starts with reporting disabled.
 
 **Branding** is configured in `config.toml`:
 
