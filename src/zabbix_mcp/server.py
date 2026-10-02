@@ -2472,8 +2472,8 @@ def _register_tools(
                 logger.info("PDF reporting enabled (report_generate tool registered)")
         else:
             logger.info("PDF reporting disabled (install 'weasyprint' and 'jinja2' to enable)")
-    except ImportError:
-        logger.info("PDF reporting disabled (reporting module not found)")
+    except (ImportError, OSError) as exc:
+        logger.info("PDF reporting disabled (reporting module could not be loaded: %s)", exc)
 
     # ------------------------------------------------------------------
     # Action approval flow (two-step prepare + confirm)
