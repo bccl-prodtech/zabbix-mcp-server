@@ -1,5 +1,30 @@
 # Changelog
 
+## v1.37 - 2026-10-02
+
+Legacy password login for Zabbix 5.0 and 5.2 - behind an explicit switch, version-locked, and loudly marked as what it is.
+
+### Added
+
+- **`legacy_auth` for Zabbix 5.0 / 5.2** ([#77](https://github.com/initMAX/zabbix-mcp-server/issues/77), [PR #78](https://github.com/initMAX/zabbix-mcp-server/pull/78) by [@rspadim](https://github.com/rspadim), reworked). Those two releases have no API tokens - they were introduced in 5.4 - so until now they could not be connected at all. A `[zabbix.X]` entry may now carry `legacy_auth = true` with `username`/`password`, and the server signs in with `user.login`. The contributed PR made password login a silent fallback whenever `api_token` was missing and relaxed the library's version check for every credential login; this release keeps the mechanism and changes the rules around it:
+  - **Explicit only.** `username`/`password` without `legacy_auth = true` is a configuration error, never a fallback. `legacy_auth` together with `api_token` is refused - one credential per entry, nothing inferred.
+  - **Version lock.** On connect the server reads `apiinfo.version` and refuses legacy login against Zabbix **5.4 or newer**. The same check runs in the admin portal's "Test connection" and "Test & Add". The switch cannot be used to avoid tokens on a release that has them.
+  - **Loud.** Every start logs a `WARNING` per legacy entry naming the Zabbix version. The admin portal shows a red warning on the server card and inside the Add / Edit form, and greys out the API token field with a note while legacy auth is on.
+  - **Password hygiene.** Never echoed back into a form re-render, never sent to the browser on edit ("leave empty to keep"), never logged, `${ENV_VAR}` supported. The `zabbix-utils` version gate (refuses < 6.0) is relaxed only for legacy entries.
+  - The `user.login` session expires; the existing reconnect-on-`not authorised` logic re-authenticates, so no long-lived session is deliberately kept alive.
+
+  **This is best effort for a Zabbix release that is out of upstream support, and holding a user password instead of a revocable token is a security risk you choose.** README, `config.example.toml`, `SECURITY.md` and the portal all say so. The compatibility table now lists 5.4 (tokens exist, untested) separately from 5.0 / 5.2 (legacy, best effort).
+
+### Fixed
+
+- The `pattern` attribute on the server-name inputs (`[a-zA-Z][a-zA-Z0-9_-]*`) is an invalid regular expression under the Unicode-sets flag current browsers compile it with, so `checkValidity()` threw and native validation of the Add / Edit Server forms was silently skipped. The hyphen is now escaped.
+
+### Verified
+
+- 457 unit + e2e tests, all passing. 23 new: the loader rules (flag/token/credentials matrix, env expansion, non-boolean flag), the client (5.0 logs in and warns; 5.4 / 6.0 / 7.4 / 8.0 refused before any login; token path keeps the operator's version-gate setting), and the portal handlers driven as themselves (what the form writes is what the loader accepts; a validation error never carries the password back).
+- **Live against a real Zabbix 5.0.47** (Docker, `zabbix/zabbix-server-pgsql:alpine-5.0-latest`): added through the admin portal with legacy auth, "Test & Add" green, config written with `legacy_auth = true` and no `api_token`, server restarted, `host_get` through MCP returned data, startup `WARNING` logged. The same entry pointed at a Zabbix 7.4.8 was refused by the runtime client and by the portal's "Test & Add" with the version message, and nothing was written.
+- CRUD smoke against live Zabbix 7.4; installer matrix 18/18.
+
 ## v1.36.2 - 2026-10-02
 
 Two contributed fixes. Thank you to both authors - and apologies that they waited; a Zabbix 8.0 release has been taking most of our capacity.

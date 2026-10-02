@@ -84,7 +84,7 @@ Done. The server is running on `http://127.0.0.1:8080/mcp`.
 
 - Linux server with Python 3.10+
 - Network access to your Zabbix server(s)
-- A Zabbix account to authenticate with: an **API token** ([User settings > API tokens](https://www.zabbix.com/documentation/current/en/manual/web_interface/frontend_sections/users/api_tokens), Zabbix 5.4+) or **username + password** (Zabbix 5.0 – 5.2, which has no API tokens)
+- A Zabbix **API token** ([User settings > API tokens](https://www.zabbix.com/documentation/current/en/manual/web_interface/frontend_sections/users/api_tokens)). Zabbix 5.0 and 5.2 have no API tokens; for those two releases only, an explicit legacy password login exists - see [Legacy auth](#legacy-auth-zabbix-50-and-52-only) and read the warning there first
 
 ### Install
 
@@ -194,9 +194,6 @@ api_token = "your-api-token"
 read_only = true
 verify_ssl = true
 
-# Zabbix 5.0 – 5.2 has no API tokens: use username + password instead:
-# username = "zabbix-mcp"
-# password = "${ZABBIX_PROD_PASSWORD}"
 ```
 
 All available options with detailed descriptions are documented in [`config.example.toml`](config.example.toml).
@@ -215,7 +212,7 @@ The config file contains **two different types of tokens** that serve different 
                                     └──────────────────┘
 ```
 
-**`api_token`** (in `[zabbix.*]`) — authenticates the MCP server to your Zabbix instance. This is a [Zabbix API token](https://www.zabbix.com/documentation/current/en/manual/web_interface/frontend_sections/users/api_tokens) that you create in the Zabbix frontend. It is **required** unless you authenticate with `username`/`password` instead — see [Zabbix 5.0 and older](#zabbix-50-and-older-no-api-tokens) below.
+**`api_token`** (in `[zabbix.*]`) — authenticates the MCP server to your Zabbix instance. This is a [Zabbix API token](https://www.zabbix.com/documentation/current/en/manual/web_interface/frontend_sections/users/api_tokens) that you create in the Zabbix frontend. It is **required**. The only exception is the explicit legacy password login for Zabbix 5.0 and 5.2 - see [Legacy auth](#legacy-auth-zabbix-50-and-52-only).
 
 How to create one:
 
@@ -234,40 +231,39 @@ The token inherits the permissions of the Zabbix user it belongs to:
 
 Use the principle of least privilege — create a dedicated Zabbix user for the MCP server with only the permissions it needs.
 
-#### Zabbix 5.0 and older (no API tokens)
+#### Legacy auth (Zabbix 5.0 and 5.2 only)
 
-Zabbix only introduced API tokens in **5.4**. On Zabbix **5.0 – 5.2**, authenticate with `username`/`password` instead — the MCP server calls `user.login` on every connection:
+> **Read this before enabling it.** Zabbix 5.0 and 5.2 are **out of upstream support** and have **no API tokens** - they were introduced in 5.4. The only way in is a username and password, which means this server holds a **user password** in its configuration instead of a revocable, scoped token. That is a security risk you are choosing to carry, and this project treats the whole path as **best effort**: it is not in our test matrix and we cannot verify it against a live 5.x. The right fix is upgrading Zabbix. If you cannot yet, this exists so you are not locked out in the meantime.
+
+It has to be switched on explicitly. A `username`/`password` pair without the flag is a configuration error, not a fallback:
 
 ```toml
-[zabbix.production]
-url = "https://zabbix.example.com"
-username = "zabbix-mcp"          # dedicated low-privilege account
-password = "${ZABBIX_PROD_PASSWORD}"
+[zabbix.old-prod]
+url = "https://zabbix5.example.com"
+legacy_auth = true                   # the switch - Zabbix 5.0 / 5.2 only
+username = "zabbix-mcp"              # dedicated low-privilege account
+password = "${ZABBIX_OLD_PASSWORD}"  # keep it in the environment, not the file
 read_only = true
 ```
 
-`api_token` takes precedence when both are set. The same least-privilege rule applies: use a dedicated Zabbix user with only the permissions the MCP tools need.
+Rules the server enforces:
 
-**Keeping the password out of the config file:** `username` and `password` support `${ENV_VAR}` expansion, so you can store the secret in an environment variable instead of plaintext in `config.toml`. Under Docker, add the variable to your `.env` file (the compose file injects it via `env_file`):
+- `legacy_auth = true` and `api_token` on the same entry is refused - one credential per server, nothing inferred.
+- `username`/`password` without `legacy_auth = true` is refused.
+- **Version lock:** on connect the server reads `apiinfo.version` and refuses legacy login against anything **5.4 or newer**. On a current Zabbix the flag does nothing except fail loudly, so it cannot be used to avoid tokens where they exist.
+- Every start logs a `WARNING` for each legacy entry naming the Zabbix version, so the choice stays visible in the operational log.
+- The admin portal shows the same warning on the server card and in the Add / Edit form, and the password is never sent back to the browser.
+
+The session from `user.login` expires; the server re-authenticates automatically when Zabbix answers that it has. Use a dedicated Zabbix user with only the permissions the tools need, and `read_only = true` unless writes are genuinely required.
+
+**Keeping the password out of the config file:** `username` and `password` support `${ENV_VAR}` expansion. Under Docker, put the variable in `.env` (the compose file injects it via `env_file`):
 
 ```bash
 # .env
-ZABBIX_PROD_USER=zabbix-mcp
-ZABBIX_PROD_PASSWORD=your-password-here
+ZABBIX_OLD_PASSWORD=your-password-here
 ```
 
-```toml
-# config.toml
-[zabbix.production]
-url = "https://zabbix.example.com"
-username = "${ZABBIX_PROD_USER}"
-password = "${ZABBIX_PROD_PASSWORD}"
-read_only = true
-```
-
-The variable name is up to you (`ZBX_PASSWORD`, `ZABBIX_PASSWORD`, ...) as long as the `${...}` reference in TOML matches the variable in the environment of the running process/container.
-
-> **Zabbix 5.0 note:** the underlying `zabbix-utils` library only supports Zabbix ≥ 6.0 by default. The MCP server automatically skips the version compatibility check whenever it authenticates with `username`/`password`, so no extra config is needed on Zabbix 5.0.
+The `zabbix-utils` library this server uses refuses Zabbix below 6.0 by default; the version check is relaxed **only** for entries marked `legacy_auth`, never for token authentication.
 
 #### MCP Authentication (optional)
 
@@ -1069,9 +1065,10 @@ All available options with detailed descriptions are in [`config.example.toml`](
 <tr><td><code>allowed_import_dirs</code></td><td>Directories for <code>source_file</code> imports (default: disabled)</td></tr>
 <tr><td><code>compact_output</code></td><td>Return only key fields from get methods (default: <code>true</code>); set to <code>false</code> to always return all fields</td></tr>
 <tr><td><code>response_max_chars</code></td><td>Maximum characters per tool response before truncation (default: <code>50000</code>, min: <code>5000</code>). Increase for template export workflows: <code>200000</code> for medium templates, <code>500000</code> for large built-in templates. See <a href="#token-budget">Token Budget</a></td></tr>
-<tr><td rowspan="6"><code>[zabbix.&lt;name&gt;]</code></td><td><code>url</code></td><td>Zabbix frontend URL (must start with <code>http://</code> or <code>https://</code>)</td></tr>
-<tr><td><code>api_token</code></td><td>API token (supports <code>${ENV_VAR}</code>) — required unless <code>username</code>/<code>password</code> is set (Zabbix &lt; 5.4)</td></tr>
-<tr><td><code>username</code> / <code>password</code></td><td>Zabbix login credentials for versions without API tokens (Zabbix 5.0 – 5.2); the server calls <code>user.login</code>. Only used when <code>api_token</code> is empty</td></tr>
+<tr><td rowspan="7"><code>[zabbix.&lt;name&gt;]</code></td><td><code>url</code></td><td>Zabbix frontend URL (must start with <code>http://</code> or <code>https://</code>)</td></tr>
+<tr><td><code>api_token</code></td><td>API token (supports <code>${ENV_VAR}</code>) — required, except on an entry with <code>legacy_auth = true</code></td></tr>
+<tr><td><code>legacy_auth</code></td><td>Explicit switch for password login on <strong>Zabbix 5.0 / 5.2 only</strong> (no API tokens there). Refused against Zabbix 5.4+, refused together with <code>api_token</code>. Unsupported upstream release and a security risk - see <a href="#legacy-auth-zabbix-50-and-52-only">Legacy auth</a>. Default <code>false</code></td></tr>
+<tr><td><code>username</code> / <code>password</code></td><td>Zabbix login credentials, only honoured when <code>legacy_auth = true</code> (supports <code>${ENV_VAR}</code>)</td></tr>
 <tr><td><code>read_only</code></td><td>Block write operations (default: <code>true</code>)</td></tr>
 <tr><td><code>verify_ssl</code></td><td>Verify TLS certificates (default: <code>true</code>)</td></tr>
 <tr><td><code>skip_version_check</code></td><td>Skip zabbix-utils version compatibility check (default: <code>false</code>)</td></tr>
@@ -1244,7 +1241,8 @@ The installer automatically detects the best available Python (>=3.10). If none 
 <tr><td>8.0</td><td>Experimental</td><td>Works with <code>skip_version_check = true</code> — core API methods tested, some 8.0-specific methods may not be covered yet</td></tr>
 <tr><td>7.0 LTS, 7.2, 7.4</td><td>Fully supported</td><td>All API methods match this version — complete feature coverage</td></tr>
 <tr><td>6.0 LTS, 6.2, 6.4</td><td>Supported</td><td>Core methods work, some newer API methods (e.g. proxy groups, MFA) may return errors</td></tr>
-<tr><td>5.0 LTS, 5.2, 5.4</td><td>Basic support</td><td>Core monitoring and data collection work, newer features unavailable</td></tr>
+<tr><td>5.4</td><td>Basic, untested</td><td>Has API tokens, so the normal configuration applies. Core monitoring and data collection should work; not in our test matrix</td></tr>
+<tr><td>5.0 LTS, 5.2</td><td>Legacy, best effort</td><td><strong>Out of upstream support, no API tokens.</strong> Reachable only through <code>legacy_auth = true</code> with a username and password - a security risk by design, see <a href="#legacy-auth-zabbix-50-and-52-only">Legacy auth</a>. Not in our test matrix; verified by a community contributor on 5.0.47</td></tr>
 </table>
 
 The server uses the standard Zabbix JSON-RPC API. Methods not available in your Zabbix version will return an error from the Zabbix server — the MCP server itself does not enforce version checks.

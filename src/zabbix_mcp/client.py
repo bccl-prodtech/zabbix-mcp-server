@@ -210,24 +210,38 @@ class ClientManager:
         # 300 s default matches Zabbix PHP frontend's max_execution_time
         # so expensive exports / long history.get ranges can complete.
         timeout = getattr(srv, "request_timeout", 300) or 300
-        # zabbix-utils only supports Zabbix >= 6.0 by default (its version
-        # gate is __min_supported__ = 6.0). When authenticating with
-        # username/password we may be talking to Zabbix 5.0-5.2 (which has
-        # no API tokens), so skip the version check. Token auth implies
-        # Zabbix 5.4+ and keeps the user-controlled skip_version_check.
-        skip_version_check = srv.skip_version_check or (not srv.api_token)
+        # zabbix-utils refuses anything below its __min_supported__ (6.0)
+        # unless told not to. That gate is relaxed ONLY for an entry the
+        # operator marked legacy_auth - the whole point of that flag is
+        # Zabbix 5.0-5.2 - and never widened for token auth, which keeps
+        # the operator-controlled skip_version_check as before.
+        legacy = getattr(srv, "legacy_auth", False)
         api = ZabbixAPI(
             url=srv.url,
             ssl_context=_build_ssl_context(srv.verify_ssl),
-            skip_version_check=skip_version_check,
+            skip_version_check=srv.skip_version_check or legacy,
             timeout=timeout,
         )
-        if srv.api_token:
-            logger.info("Authenticating to '%s' using API token", name)
-            api.login(token=srv.api_token)
-        else:
-            logger.info("Authenticating to '%s' using user/password", name)
+        if legacy:
+            # Hard version lock. Password login exists for releases that
+            # have no API tokens; on anything that has them it is just a
+            # password in a config file for no reason. The constructor
+            # has already fetched apiinfo.version, so this costs nothing.
+            if api.version >= 5.4:
+                raise ValueError(
+                    f"Zabbix server '{name}' reports version {api.version}, which "
+                    f"supports API tokens. 'legacy_auth' is only accepted for "
+                    f"Zabbix 5.0-5.2 - remove it and configure 'api_token'."
+                )
+            logger.warning(
+                "Zabbix server '%s' (Zabbix %s) uses LEGACY password login. This "
+                "Zabbix release is out of upstream support and the server holds a "
+                "user password instead of a revocable API token. Treat this entry "
+                "as a security risk and plan the upgrade.", name, api.version,
+            )
             api.login(user=srv.username, password=srv.password)
+        else:
+            api.login(token=srv.api_token)
 
         version = api.api_version()
         logger.info("Connected to '%s' - Zabbix %s", name, version)

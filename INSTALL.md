@@ -9,7 +9,7 @@ Two ways to deploy the Zabbix MCP Server: **on-prem** (systemd service) or **Doc
 Both methods require:
 
 - Network access to your Zabbix server(s)
-- A Zabbix account to authenticate with: either an [API token](https://www.zabbix.com/documentation/current/en/manual/web_interface/frontend_sections/users/api_tokens) (Zabbix 5.4+, created in the frontend: **Users → API tokens → Create API token**) **or** a username + password (Zabbix 5.0 – 5.2, which has no API tokens)
+- A Zabbix [API token](https://www.zabbix.com/documentation/current/en/manual/web_interface/frontend_sections/users/api_tokens), created in the frontend: **Users → API tokens → Create API token**. (Zabbix 5.0 and 5.2 have no API tokens; for those two releases only there is an explicit, warned-about legacy password login - see the README section *Legacy auth* before using it)
 
 ## Option 1: On-Prem Installation (systemd)
 
@@ -52,7 +52,7 @@ The installer will:
 sudo nano /etc/zabbix-mcp/config.toml
 ```
 
-Minimal configuration — fill in your Zabbix URL and API token (or, on Zabbix 5.0 – 5.2 which has no API tokens, `username` + `password`):
+Minimal configuration — fill in your Zabbix URL and API token:
 
 ```toml
 [server]
@@ -63,9 +63,6 @@ port = 8080
 [zabbix.production]
 url = "https://zabbix.example.com"
 api_token = "your-zabbix-api-token-here"
-# Zabbix < 5.4: use username + password instead of api_token
-# username = "zabbix-mcp"
-# password = "${ZABBIX_PROD_PASSWORD}"
 read_only = true
 ```
 
@@ -176,9 +173,6 @@ transport = "http"
 [zabbix.production]
 url = "https://zabbix.example.com"
 api_token = "your-zabbix-api-token-here"
-# Zabbix < 5.4: use username + password instead of api_token
-# username = "zabbix-mcp"
-# password = "${ZABBIX_PROD_PASSWORD}"
 read_only = true
 ```
 

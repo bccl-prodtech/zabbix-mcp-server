@@ -47,10 +47,16 @@ class ZabbixServerConfig:
     read_only: bool = True
     verify_ssl: bool = True
     skip_version_check: bool = False
-    # Optional username + password for Zabbix < 5.4 (API tokens only
-    # exist from 5.4 onward). When `api_token` is set it takes
-    # precedence; these may coexist so ``graph_render`` can still log
-    # in to the frontend.
+    # Legacy password login for Zabbix 5.0-5.2, which have no API tokens.
+    # Off by default and only honoured when `legacy_auth` is set: the
+    # operator has to say out loud that they are pointing an AI at a
+    # Zabbix release that is out of upstream support, with a password in
+    # the config rather than a revocable token. Mutually exclusive with
+    # `api_token` - nothing is inferred from which one happens to be
+    # present. The client additionally refuses this path against any
+    # Zabbix >= 5.4, so it cannot be used to avoid tokens on a current
+    # release.
+    legacy_auth: bool = False
     username: str = ""
     password: str = ""
     # Optional username + password used by ``graph_render`` to acquire
@@ -386,29 +392,61 @@ def _parse_zabbix_server(name: str, srv: object) -> "ZabbixServerConfig":
             f"IPv4/IPv6 address."
         )
     api_token = srv.get("api_token")
+    legacy_auth = srv.get("legacy_auth", False)
+    if not isinstance(legacy_auth, bool):
+        raise ConfigError(
+            f"Zabbix server '{name}' has non-boolean 'legacy_auth' "
+            f"({legacy_auth!r}); use plain true / false"
+        )
     username = str(srv.get("username", "") or "")
     password = str(srv.get("password", "") or "")
-    if api_token:
-        # API token takes precedence when present.
+    if legacy_auth:
+        # Zabbix 5.0-5.2: password login, and only that. A token on the
+        # same entry would leave it ambiguous which credential is live.
+        if api_token:
+            raise ConfigError(
+                f"Zabbix server '{name}' sets both 'legacy_auth = true' and "
+                f"'api_token'. Legacy password login is for Zabbix 5.0-5.2 "
+                f"only, which has no API tokens - pick one."
+            )
+        if not username or not password:
+            raise ConfigError(
+                f"Zabbix server '{name}' has 'legacy_auth = true' but is missing "
+                f"'username' or 'password'"
+            )
+        username = _resolve_env_vars(username)
+        password = _resolve_env_vars(password)
+        if not username.strip() or not password.strip():
+            raise ConfigError(
+                f"Zabbix server '{name}' has empty 'username' or 'password' after "
+                f"resolving environment variables"
+            )
+        api_token = ""
+    else:
+        # The normal path. A username/password pair without the explicit
+        # flag is refused rather than quietly used: the point of the
+        # flag is that password auth is never a silent fallback.
+        if username or password:
+            raise ConfigError(
+                f"Zabbix server '{name}' has 'username'/'password' but not "
+                f"'legacy_auth = true'. Password login is only for Zabbix 5.0-5.2 "
+                f"(no API tokens there) and must be enabled explicitly; on "
+                f"Zabbix 5.4+ use 'api_token'."
+            )
+        if not api_token:
+            raise ConfigError(f"Zabbix server '{name}' is missing 'api_token'")
         api_token = _resolve_env_vars(api_token)
         if not api_token.strip():
             raise ConfigError(
                 f"Zabbix server '{name}' has empty 'api_token' after resolving "
                 f"environment variables"
             )
-    else:
-        # Zabbix < 5.4 has no API tokens: fall back to user.login.
-        if not username or not password:
-            raise ConfigError(
-                f"Zabbix server '{name}' is missing 'api_token' (Zabbix < 5.4) "
-                f"or 'username'/'password'"
-            )
-    username = _resolve_env_vars(username)
-    password = _resolve_env_vars(password)
+        username = password = ""
     return ZabbixServerConfig(
         name=name,
         url=url.rstrip("/"),
         api_token=api_token,
+        legacy_auth=legacy_auth,
         username=username,
         password=password,
         read_only=srv.get("read_only", True),

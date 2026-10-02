@@ -34,6 +34,18 @@ We will acknowledge your report within 48 hours and work with you on a fix.
 - Use environment variable references (`${ENV_VAR}`) to avoid storing tokens in plain text
 - Tokens inherit the permissions of the Zabbix user they belong to — use the principle of least privilege
 
+### Legacy password login (Zabbix 5.0 / 5.2 only, v1.37+)
+
+Zabbix 5.0 and 5.2 have no API tokens (introduced in 5.4) and are out of upstream support. For those two releases only, a `[zabbix.X]` entry may authenticate with `username`/`password` via `user.login` - which means the MCP server holds a **user password** in its configuration instead of a revocable, scoped token. This is a deliberate, operator-chosen security risk and the whole path is best effort: it is not in our test matrix. The fences:
+
+- It must be switched on explicitly with `legacy_auth = true`. A `username`/`password` pair without the flag is a configuration error, never a fallback, so password login cannot creep into an entry by omission.
+- `legacy_auth` and `api_token` on the same entry is refused, so an entry carries exactly one credential.
+- **Version lock:** on connect the server reads `apiinfo.version` and refuses legacy login against Zabbix 5.4 or newer. The same check runs in the admin portal's "Test connection". The flag therefore cannot be used to avoid tokens on a release that has them.
+- The `zabbix-utils` version gate (refuses < 6.0) is relaxed only for entries marked `legacy_auth`, never for token authentication.
+- Every start logs a `WARNING` per legacy entry naming the Zabbix version; the admin portal shows a red warning on the server card and in the Add / Edit form.
+- The password is never sent back to the browser (edit form shows "leave empty to keep"), is not echoed into a form re-render on a validation error, is not logged, and supports `${ENV_VAR}` so it can live in the environment rather than the file. The same `chmod 600` advice as for tokens applies.
+- Use a dedicated low-privilege Zabbix user and keep `read_only = true` unless writes are genuinely required. The `user.login` session expires; the server re-authenticates when Zabbix reports it, so no long-lived session is kept alive on purpose.
+
 ### Admin Portal Security
 
 - Session-based authentication with scrypt password hashing (n=16384, r=8, p=1)
@@ -133,7 +145,8 @@ The route is served outside the MCP endpoint's `TransportSecuritySettings`, so i
 
 | Version | Supported |
 |---|---|
-| 1.36.2 (latest) | Yes |
+| 1.37 (latest) | Yes |
+| 1.36.2 | Yes |
 | 1.36.1 | Yes |
 | 1.36 | Yes |
 | 1.35 | Yes |

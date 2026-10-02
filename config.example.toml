@@ -602,14 +602,24 @@ url = "https://zabbix.example.com"
 # User settings > API tokens > Create API token. Tokens inherit the
 # permissions of the Zabbix user they belong to.
 #
-# Either `api_token` OR `username` + `password` must be set. Zabbix 5.0-5.2
-# do NOT support API tokens, so use the username/password pair there:
-#
-#   username = "zabbix-mcp"
-#   password = "${ZABBIX_PROD_PASSWORD}"
-#
-# When api_token is present it takes precedence over username/password.
+# Required - with one explicit exception, below.
 api_token = "your-api-token-here"
+
+# LEGACY PASSWORD LOGIN - Zabbix 5.0 and 5.2 ONLY. READ BEFORE ENABLING.
+# Those two releases have no API tokens (introduced in 5.4) and are out
+# of upstream support. Enabling this makes the MCP server hold a Zabbix
+# USER PASSWORD instead of a revocable, scoped token: that is a security
+# risk you are choosing, and this path is best effort - it is not in our
+# test matrix. The right fix is upgrading Zabbix.
+# Rules: legacy_auth and api_token on one entry is refused; username/
+# password WITHOUT legacy_auth = true is refused (never a silent
+# fallback); and on connect the server refuses legacy login against any
+# Zabbix 5.4 or newer, so it cannot replace tokens where they exist.
+# Every start logs a WARNING for each legacy entry. Keep the password in
+# the environment via ${VAR}, and use a dedicated low-privilege user.
+# legacy_auth = true
+# username = "zabbix-mcp"
+# password = "${ZABBIX_OLD_PASSWORD}"
 
 # You can reference an environment variable instead of storing the token in plain text:
 # api_token = "${ZABBIX_PROD_TOKEN}"
@@ -652,9 +662,6 @@ verify_ssl = true
 # [zabbix.staging]
 # url = "https://zabbix-staging.example.com"
 # api_token = "${ZABBIX_STAGING_TOKEN}"
-# ... or, for Zabbix 5.0-5.2 (no API tokens), use login credentials instead:
-# username = "zabbix-mcp"
-# password = "${ZABBIX_STAGING_PASSWORD}"
 # read_only = false
 # verify_ssl = false
 # skip_version_check = false

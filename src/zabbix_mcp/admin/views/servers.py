@@ -140,6 +140,7 @@ def _render_servers_list(request: Request, admin_app, extra: dict | None = None)
             "verify_ssl": verify_ssl,
             "config_changed": config_changed,
             "config_error": config_error,
+            "legacy_auth": bool(cfg.get("legacy_auth")),
             "is_live": name in client_manager.server_names,
         })
 
@@ -198,6 +199,7 @@ async def server_create(request: Request) -> Response:
     # it is only stored when the operator typed something.
     username = str(form.get("username", "")).strip()
     password = str(form.get("password", "")).strip()
+    legacy_auth = "legacy_auth" in form
     read_only = "read_only" in form
     verify_ssl = "verify_ssl" in form
     request_timeout = _parse_timeout(form.get("request_timeout"))
@@ -213,7 +215,11 @@ async def server_create(request: Request) -> Response:
             "form_url": url,
             "form_api_token": api_token,
             "form_username": username,
-            "form_password": password,
+            # The password is deliberately NOT echoed back into the
+            # page on a validation error - it would land in the DOM,
+            # browser history and any page capture. Retyping it is the
+            # lesser cost.
+            "form_legacy_auth": legacy_auth,
             "form_read_only": read_only,
             "form_verify_ssl": verify_ssl,
         })
@@ -238,12 +244,19 @@ async def server_create(request: Request) -> Response:
     except Exception as exc:
         return _err(f"Invalid URL: {exc}")
 
-    # Auth method: Zabbix < 5.4 has no API tokens, so username/password
-    # is the fallback (mirrors _parse_zabbix_server in config.py). At
-    # least one method must be provided; if the operator picked
-    # username/password, both fields are required.
-    if not api_token and (not username or not password):
-        return _err("Provide an API token, or a username and password pair (Zabbix < 5.4 has no API tokens).")
+    # Auth method. Mirrors _parse_zabbix_server exactly: password login
+    # only behind the explicit legacy checkbox, never as a fallback, and
+    # never together with a token.
+    if legacy_auth:
+        if api_token:
+            return _err("Legacy auth is for Zabbix 5.0-5.2, which has no API tokens. Clear the API token, or untick Legacy auth.")
+        if not username or not password:
+            return _err("Legacy auth needs both a username and a password.")
+    else:
+        if username or password:
+            return _err("Username/password login is only for Zabbix 5.0-5.2 and must be enabled with the Legacy auth checkbox. On Zabbix 5.4+ use an API token.")
+        if not api_token:
+            return _err("API token is required.")
 
     # Explicit duplicate-name check before tomlkit raises
     # `KeyAlreadyPresent: Key "<name>" already exists.` and we have to
@@ -260,18 +273,18 @@ async def server_create(request: Request) -> Response:
     try:
         server_data = {
             "url": url,
-            "api_token": api_token,
             "read_only": read_only,
             "verify_ssl": verify_ssl,
             "request_timeout": request_timeout,
         }
-        # Persist username/password only when filled. Empty password on a
-        # fresh server means the operator left the field blank (nothing to
-        # keep yet), so we simply do not write it.
-        if username:
+        if legacy_auth:
+            # No api_token key at all on a legacy entry, so the file
+            # cannot end up carrying both credentials.
+            server_data["legacy_auth"] = True
             server_data["username"] = username
-        if password:
             server_data["password"] = password
+        else:
+            server_data["api_token"] = api_token
         add_config_table(admin_app.config_path, "zabbix", name, server_data)
         logger.info("Zabbix server '%s' added by %s", name, session.user)
         client_ip = request.client.host if request.client else ""
@@ -342,6 +355,7 @@ async def server_edit(request: Request) -> Response:
     # username also drops the stored password so no orphan secret lingers.
     username = str(form.get("username", "")).strip()
     password = str(form.get("password", "")).strip()
+    legacy_auth = "legacy_auth" in form
     read_only = "read_only" in form
     verify_ssl = "verify_ssl" in form
     request_timeout = _parse_timeout(form.get("request_timeout"))
@@ -375,6 +389,25 @@ async def server_edit(request: Request) -> Response:
                 "danger",
             )
 
+        # Auth method, with the same rules as on create and in
+        # _parse_zabbix_server. "Keep current" semantics apply to the
+        # secret fields, so the check looks at what will be stored, not
+        # only at what was typed.
+        stored = dict(zabbix[server_name])
+        _back = f"/servers/{server_name}/edit"
+        if legacy_auth:
+            if api_token:
+                return admin_app.flash_redirect(_back, "Legacy auth is for Zabbix 5.0-5.2, which has no API tokens. Clear the API token, or untick Legacy auth.", "danger")
+            if not username:
+                return admin_app.flash_redirect(_back, "Legacy auth needs a username.", "danger")
+            if not password and not stored.get("password"):
+                return admin_app.flash_redirect(_back, "Legacy auth needs a password.", "danger")
+        else:
+            if username or password:
+                return admin_app.flash_redirect(_back, "Username/password login is only for Zabbix 5.0-5.2 and must be enabled with the Legacy auth checkbox. On Zabbix 5.4+ use an API token.", "danger")
+            if not api_token and not stored.get("api_token"):
+                return admin_app.flash_redirect(_back, "API token is required when Legacy auth is off.", "danger")
+
         # Apply field updates to the existing table first
         if url:
             zabbix[server_name]["url"] = url
@@ -396,14 +429,19 @@ async def server_edit(request: Request) -> Response:
             # orphan secret stored without a matching username.
             zabbix[server_name].pop("frontend_password", None)
 
-        # Zabbix API auth: username is a plaintext field that always
-        # writes (blank = clear). password only overwrites when the
-        # operator typed a new value; clearing the username also removes
-        # the stored password so a secret never lingers without its user.
-        zabbix[server_name]["username"] = username
-        if password:
-            zabbix[server_name]["password"] = password
-        elif not username:
+        # Zabbix API auth. The legacy checkbox decides which credential
+        # the entry carries; switching it drops the other one so the
+        # file never holds both. Password only overwrites when typed
+        # (empty = keep), same as the token.
+        if legacy_auth:
+            zabbix[server_name]["legacy_auth"] = True
+            zabbix[server_name]["username"] = username
+            if password:
+                zabbix[server_name]["password"] = password
+            zabbix[server_name].pop("api_token", None)
+        else:
+            zabbix[server_name].pop("legacy_auth", None)
+            zabbix[server_name].pop("username", None)
             zabbix[server_name].pop("password", None)
 
         if renamed:
@@ -541,9 +579,17 @@ def _probe_user_login(url: str, username: str, password: str, verify_ssl: bool) 
     """
     from zabbix_utils import ZabbixAPI
     api = ZabbixAPI(url=url, validate_certs=verify_ssl, skip_version_check=True)
+    version = str(api.api_version())
+    # Same lock the runtime client applies: legacy login is for releases
+    # without API tokens, full stop. A green "Connected" here on a 7.x
+    # would invite the operator to save a password where a token belongs.
+    if api.version >= 5.4:
+        raise ValueError(
+            f"Zabbix {version} supports API tokens - legacy password login is "
+            f"refused on 5.4 and newer. Untick Legacy auth and use a token."
+        )
     # Raises on bad credentials as well as connection problems.
     api.login(user=username, password=password)
-    version = str(api.api_version())
     try:
         api.host.get(limit=1, output=["hostid"])
         return True, version
@@ -576,8 +622,8 @@ async def server_test(request: Request) -> Response:
     except Exception:
         pass
 
-    if not saved.get("api_token"):
-        # No API token -> username/password login (Zabbix < 5.4).
+    if saved.get("legacy_auth"):
+        # Explicit legacy entry: password login, version-locked in the probe.
         try:
             auth_ok, version = await asyncio.to_thread(
                 _probe_user_login,
@@ -682,6 +728,7 @@ async def server_test_new(request: Request) -> Response:
     api_token = str(form.get("api_token", "")).strip()
     username = str(form.get("username", "")).strip()
     password = str(form.get("password", "")).strip()
+    legacy_auth = form.get("legacy_auth") == "1"
     verify_ssl = form.get("verify_ssl") == "1"
 
     # SECURITY: validate URL scheme and block internal/private addresses (SSRF prevention)
@@ -750,17 +797,34 @@ async def server_test_new(request: Request) -> Response:
 
     # Auth method: either an API token or a username/password pair
     # (Zabbix < 5.4 has no API tokens). Mirrors _parse_zabbix_server.
-    if not api_token and (not username or not password):
-        return HTMLResponse('<span class="text-danger">Provide an API token, or a username and password pair</span>')
+    # Same rules as save: legacy only behind the checkbox, never together
+    # with a token, never as a fallback.
+    if legacy_auth:
+        if api_token:
+            return HTMLResponse('<span class="text-danger">Legacy auth is for Zabbix 5.0 / 5.2, which has no API tokens - clear the token or untick Legacy auth</span>')
+        if not username or not password:
+            return HTMLResponse('<span class="text-danger">Legacy auth needs both a username and a password</span>')
+    else:
+        if username or password:
+            return HTMLResponse('<span class="text-danger">Username/password login requires the Legacy auth checkbox (Zabbix 5.0 / 5.2 only)</span>')
+        if not api_token:
+            return HTMLResponse('<span class="text-danger">API token is required</span>')
 
     try:
         from zabbix_utils import ZabbixAPI
-        api = ZabbixAPI(url=url, validate_certs=verify_ssl, skip_version_check=True)
-        if api_token:
-            api.login(token=api_token)
-        else:
-            api.login(user=username, password=password)
+        api = ZabbixAPI(url=url, validate_certs=verify_ssl, skip_version_check=legacy_auth)
         version = _html.escape(str(api.api_version()))
+        if legacy_auth:
+            # Version lock, identical to the runtime client and the
+            # saved-server probe.
+            if api.version >= 5.4:
+                return HTMLResponse(
+                    f'<span class="status-dot status-dot-red"></span>'
+                    f'<span style="color:var(--color-danger);"> Zabbix {version} supports API tokens - legacy password login is refused on 5.4 and newer. Untick Legacy auth and use a token.</span>'
+                )
+            api.login(user=username, password=password)
+        else:
+            api.login(token=api_token)
     except Exception as e:
         msg = _html.escape(_friendly_error(e))
         return HTMLResponse(
