@@ -396,7 +396,7 @@ def _parse_zabbix_server(name: str, srv: object) -> "ZabbixServerConfig":
     if not isinstance(legacy_auth, bool):
         raise ConfigError(
             f"Zabbix server '{name}' has non-boolean 'legacy_auth' "
-            f"({legacy_auth!r}); use plain true / false"
+            f"(got {type(legacy_auth).__name__}); use plain true / false"
         )
     username = str(srv.get("username", "") or "")
     password = str(srv.get("password", "") or "")

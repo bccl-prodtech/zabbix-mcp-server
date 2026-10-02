@@ -237,7 +237,9 @@ class ClientManager:
                 "Zabbix server '%s' (Zabbix %s) uses LEGACY password login. This "
                 "Zabbix release is out of upstream support and the server holds a "
                 "user password instead of a revocable API token. Treat this entry "
-                "as a security risk and plan the upgrade.", name, api.version,
+                "as a security risk and plan the upgrade.%s", name, api.version,
+                (" The URL is plain http://, so the password crosses the network "
+                 "in clear text on every login.") if srv.url.startswith("http://") else "",
             )
             api.login(user=srv.username, password=srv.password)
         else:

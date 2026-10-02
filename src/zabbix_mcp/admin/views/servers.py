@@ -625,11 +625,12 @@ async def server_test(request: Request) -> Response:
     if saved.get("legacy_auth"):
         # Explicit legacy entry: password login, version-locked in the probe.
         try:
+            from zabbix_mcp.config import _resolve_env_vars
             auth_ok, version = await asyncio.to_thread(
                 _probe_user_login,
                 saved.get("url", ""),
-                str(saved.get("username", "") or ""),
-                str(saved.get("password", "") or ""),
+                _resolve_env_vars(str(saved.get("username", "") or "")),
+                _resolve_env_vars(str(saved.get("password", "") or "")),
                 bool(saved.get("verify_ssl", True)),
             )
         except Exception as e:
@@ -812,7 +813,10 @@ async def server_test_new(request: Request) -> Response:
 
     try:
         from zabbix_utils import ZabbixAPI
-        api = ZabbixAPI(url=url, validate_certs=verify_ssl, skip_version_check=legacy_auth)
+        # Throwaway probe: skip the library's min/max version gate here as
+        # before (an 8.0 is 'experimental' and must still test green with
+        # a token). The legacy version lock below is our own check.
+        api = ZabbixAPI(url=url, validate_certs=verify_ssl, skip_version_check=True)
         version = _html.escape(str(api.api_version()))
         if legacy_auth:
             # Version lock, identical to the runtime client and the

@@ -2565,3 +2565,21 @@ table.tokens-list td.col-actions .btn-sm {
     right: 0;
     transform: none;
 }
+/* Mirror image for elements at the left edge. */
+[data-tooltip].tooltip-start::after {
+    left: 0;
+    right: auto;
+    transform: none;
+}
+/* Elements near the top of the viewport (header bar, first table row)
+   would push the popover above the fold; open it below instead. */
+[data-tooltip].tooltip-below::after {
+    bottom: auto;
+    top: calc(100% + 8px);
+}
+[data-tooltip].tooltip-below.tooltip-end::after,
+[data-tooltip].tooltip-below.tooltip-start::after {
+    transform: none;
+}
+/* These three are applied by the edge-flip script in base.html; the
+   markup never needs to know where on the page it will land. */

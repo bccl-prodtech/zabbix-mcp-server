@@ -328,8 +328,7 @@ read_only = true
 
 [zabbix.staging]
 url = "https://zabbix-staging.example.com"
-username = "zabbix-mcp"
-password = "${ZABBIX_STAGING_PASSWORD}"
+api_token = "staging-token"
 read_only = false
 ```
 
