@@ -2556,3 +2556,12 @@ table.tokens-list td.col-actions .btn-sm {
     top: 50%;
     transform: translateY(-50%);
 }
+/* For elements sitting at the right edge of a card or the viewport
+   (badges in a server-card header): anchor the popover's right edge to
+   the element's right edge so it grows leftwards and stays on screen,
+   instead of centring under the element and running off the page. */
+[data-tooltip].tooltip-end::after {
+    left: auto;
+    right: 0;
+    transform: none;
+}

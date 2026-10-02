@@ -35,7 +35,7 @@
             <label class="form-label">API Token <span class="tooltip-icon" tabindex="0" data-tooltip="Zabbix API token (User settings -> API tokens in Zabbix UI). Must have permissions for the actions the AI client will perform. Leave empty here to keep the current value. Not used when Legacy auth is enabled.">&#x1F6C8;</span></label>
             <input type="password" name="api_token" id="srv-token" class="form-input" value="" placeholder="{% if server.api_token %}Leave empty to keep current{% else %}Not configured{% endif %}" autocomplete="off">
             <small id="srv-token-hint" class="text-muted" style="display:none; color:var(--color-danger);">&#x26A0;&#xFE0F; Not used &mdash; Legacy auth is enabled; the server signs in with the username and password below.</small>
-            <small class="text-muted">
+            <small id="srv-token-help" class="text-muted">
                 {% if server.api_token %}
                 Leave empty to keep the current token. Current: <code>{{ server.api_token[:8] }}...{{ server.api_token[-4:] }}</code>
                 {% elif server.legacy_auth %}
@@ -46,8 +46,8 @@
             </small>
         </div>
         <div class="form-group">
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;" tabindex="0" data-tooltip="Only for Zabbix 5.0 and 5.2, which have no API tokens. Refused against Zabbix 5.4 or newer, and refused together with an API token. Switching it off removes the stored username and password.">
-                <input type="checkbox" name="legacy_auth" id="srv-legacy" onchange="_toggleLegacy('srv')" {% if server.legacy_auth %}checked{% endif %}> Legacy auth (Zabbix 5.0 / 5.2 only) <span class="tooltip-icon">&#x1F6C8;</span>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="checkbox" name="legacy_auth" id="srv-legacy" onchange="_toggleLegacy('srv')" {% if server.legacy_auth %}checked{% endif %}> Legacy auth (Zabbix 5.0 / 5.2 only) <span class="tooltip-icon" tabindex="0" data-tooltip="Only for Zabbix 5.0 and 5.2, which have no API tokens. Refused against Zabbix 5.4 or newer, and refused together with an API token. Switching it off removes the stored username and password.">&#x1F6C8;</span>
             </label>
         </div>
         <div id="srv-legacy-box" style="{% if not server.legacy_auth %}display:none;{% endif %} border:2px solid var(--color-danger); border-radius:var(--radius-md); background:rgba(239,68,68,0.08); padding:12px 16px; margin-bottom:12px;">
@@ -125,6 +125,8 @@
         var wrap = document.getElementById(prefix + '-token-group');
         if (tok) { tok.disabled = on; if (on) { tok.value = ''; } }
         if (hint) { hint.style.display = on ? '' : 'none'; }
+        var help = document.getElementById(prefix + '-token-help');
+        if (help) { help.style.display = on ? 'none' : ''; }
         if (wrap) { wrap.style.opacity = on ? '0.5' : ''; }
     }
     document.addEventListener('DOMContentLoaded', function () { _toggleLegacy('srv'); });

@@ -45,11 +45,11 @@
             <label class="form-label">API Token <span class="tooltip-icon" tabindex="0" data-tooltip="Zabbix API token (User settings -> API tokens in the Zabbix UI). Must have permissions for the actions the AI client will perform. Required unless Legacy auth is enabled below.">&#x1F6C8;</span></label>
             <input type="text" name="api_token" id="add-token" class="form-input" placeholder="Zabbix API token" value="{{ form_api_token | default('') }}">
             <small id="add-token-hint" class="text-muted" style="display:none; color:var(--color-danger);">&#x26A0;&#xFE0F; Not used &mdash; Legacy auth is enabled; the server signs in with the username and password below.</small>
-            <small class="text-muted">Create in Zabbix: User settings &rarr; API tokens.</small>
+            <small id="add-token-help" class="text-muted">Create in Zabbix: User settings &rarr; API tokens.</small>
         </div>
         <div class="form-group">
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;" tabindex="0" data-tooltip="Only for Zabbix 5.0 and 5.2, which have no API tokens. Refused against Zabbix 5.4 or newer, and refused together with an API token.">
-                <input type="checkbox" name="legacy_auth" id="add-legacy" onchange="_toggleLegacy('add')" {% if form_legacy_auth %}checked{% endif %}> Legacy auth (Zabbix 5.0 / 5.2 only) <span class="tooltip-icon">&#x1F6C8;</span>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="checkbox" name="legacy_auth" id="add-legacy" onchange="_toggleLegacy('add')" {% if form_legacy_auth %}checked{% endif %}> Legacy auth (Zabbix 5.0 / 5.2 only) <span class="tooltip-icon" tabindex="0" data-tooltip="Only for Zabbix 5.0 and 5.2, which have no API tokens. Refused against Zabbix 5.4 or newer, and refused together with an API token.">&#x1F6C8;</span>
             </label>
         </div>
         <div id="add-legacy-box" style="{% if not form_legacy_auth %}display:none;{% endif %} border:2px solid var(--color-danger); border-radius:var(--radius-md); background:rgba(239,68,68,0.08); padding:12px 16px; margin-bottom:12px;">
@@ -101,6 +101,8 @@
         var wrap = document.getElementById(prefix + '-token-group');
         if (tok) { tok.disabled = on; if (on) { tok.value = ''; } }
         if (hint) { hint.style.display = on ? '' : 'none'; }
+        var help = document.getElementById(prefix + '-token-help');
+        if (help) { help.style.display = on ? 'none' : ''; }
         if (wrap) { wrap.style.opacity = on ? '0.5' : ''; }
     }
     document.addEventListener('DOMContentLoaded', function () { _toggleLegacy('add'); });
@@ -211,7 +213,7 @@
                 <span class="badge badge-danger">✖ Config error</span>
                 {% endif %}
                 {% if server.legacy_auth %}
-                <span class="badge badge-danger" tabindex="0" data-tooltip="Legacy password login for Zabbix 5.0 / 5.2 - unsupported Zabbix version, security risk. The MCP server holds a user password instead of a revocable token. Best effort, not in our test matrix. Plan the upgrade.">&#x26A0;&#xFE0F; Legacy auth</span>
+                <span class="badge badge-danger tooltip-end" tabindex="0" data-tooltip="Legacy password login for Zabbix 5.0 / 5.2 - unsupported Zabbix version, security risk. The MCP server holds a user password instead of a revocable token. Best effort, not in our test matrix. Plan the upgrade.">&#x26A0;&#xFE0F; Legacy auth</span>
                 {% endif %}
             </div>
         </div>
