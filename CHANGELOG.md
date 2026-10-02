@@ -12,11 +12,13 @@ Two contributed fixes. Thank you to both authors - and apologies that they waite
 ### Added
 
 - A regression test for the `OSError` guard that drives both real code paths - the engine module re-imported under a failing `import weasyprint`, and `_register_tools()` run against an engine whose attribute access raises - and is verified to fail on the pre-fix code.
-- `SECURITY.md` now states the symlink rule precisely (resolve, containment check on the resolved target, then `O_NOFOLLOW` open), since the old test names implied a stricter rule than the one actually enforced.
+- `source_file` for `configuration_import` now has to be a **regular file**: after the `O_NOFOLLOW` open, `fstat` refuses a directory, FIFO or device that sits under an allowed directory (a FIFO would have blocked the handler thread indefinitely). A missing or unreadable file is reported as such instead of as "must not be a symbolic link".
+- `SECURITY.md` now states the symlink rule precisely - and honestly. Review of #81 showed the first draft of that sentence claimed "no TOCTOU race"; `O_NOFOLLOW` only covers the final path component, so the check-to-open window is narrowed, not closed, and the document says so.
+- Note for stateful (pre-2026-07-28) HTTP clients: the MCP SDK resolved to 2.2.0 on fresh installs, which introduces a 30-minute idle timeout per session and a cap of 10,000 sessions by default. Stateless 2026-07-28 clients are unaffected. No API the server uses changed.
 
 ### Verified
 
-- 430 unit + e2e tests, all passing - the first fully green suite since v1.15
+- 434 unit + e2e tests, all passing - the first fully green suite since v1.15. The seven new ones are verified against the pre-fix code: the import-guard tests error out, the directory test surfaces a raw `IsADirectoryError`, the missing-file test gets the misleading symlink message, and the FIFO test hangs until killed
 - CRUD smoke against live Zabbix; installer matrix 18/18
 
 ## v1.36.1 - 2026-08-07

@@ -657,17 +657,37 @@ def _resolve_source_file(
             "are permitted."
         )
 
-    # Open with O_NOFOLLOW to reject symlinks atomically (no TOCTOU race)
+    # Open with O_NOFOLLOW so a symlink swapped in as the FINAL path
+    # component after the containment check above is refused. That is
+    # what O_NOFOLLOW covers - a directory symlink introduced higher up
+    # the already-resolved path would still be followed by the kernel,
+    # so the check-to-open window is narrowed, not closed. The fstat
+    # below then insists on a regular file: a directory, FIFO or device
+    # under an allowed dir passes containment but must never be read.
+    # O_NONBLOCK makes the open of a writer-less FIFO return at once
+    # instead of parking this thread until a writer shows up; it is a
+    # no-op for a regular file.
+    import errno
     import os
+    import stat
     try:
-        fd = os.open(str(path), os.O_RDONLY | os.O_NOFOLLOW)
-    except OSError:
+        fd = os.open(str(path), os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError as exc:
+        if exc.errno == errno.ELOOP:
+            raise ValueError(
+                "source_file must not be a symbolic link (security restriction)."
+            ) from None
         raise ValueError(
-            "source_file must not be a symbolic link (security restriction)."
-        )
+            f"source_file could not be opened: {exc.strerror or exc.__class__.__name__}."
+        ) from None
     try:
-        content = os.fdopen(fd, "r", encoding="utf-8").read()
-    except Exception:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise ValueError(
+                "source_file must be a regular file (security restriction)."
+            )
+        with os.fdopen(fd, "r", encoding="utf-8") as fh:
+            content = fh.read()
+    except ValueError:
         os.close(fd)
         raise
     result = {**params, "source": content}
