@@ -332,7 +332,7 @@ api_token = "staging-token"
 read_only = false
 ```
 
-The first server (`production`) is used as the default. To target a specific instance, just mention it naturally in your prompt:
+The first server (`production`) is used as the default. One exception: when the MCP token making the call is restricted to exactly one server (`allowed_servers = ["staging"]`), that server is the default for the call - so per-user tokens, each pointing at its own `[zabbix.<user>]` entry, work without the user having to name their server every time. To target a specific instance, just mention it naturally in your prompt:
 
 #### Prompt examples
 

@@ -1280,6 +1280,30 @@ def _report_download_base(config, transport: str) -> tuple[str | None, str | Non
     )
 
 
+def _default_server_for_caller(client_manager) -> str | None:
+    """Which Zabbix server a tool call means when it does not say.
+
+    A token scoped to exactly one server can only ever reach that one,
+    so falling back to the *global* default (the first server in the
+    config) just produces a denial naming somebody else's server, for an
+    ordinary question. That is what made the per-user deployment of
+    #74 work only for whoever happened to be listed first.
+
+    Only an unambiguous scope is honoured: a wildcard, several servers,
+    or a name that is not configured all fall back to the global
+    default, and check_token_authorization still has the last word
+    after this - so a caller can only ever land on a server it would
+    have been allowed to name explicitly.
+    """
+    from zabbix_mcp.token_store import current_token_info
+    token = current_token_info.get()
+    if token is not None:
+        allowed = list(getattr(token, "allowed_servers", None) or [])
+        if len(allowed) == 1 and allowed[0] != "*" and allowed[0] in client_manager.server_names:
+            return allowed[0]
+    return client_manager.default_server
+
+
 def _load_server_icons() -> list[Icon] | None:
     """Build the ``icons`` list for ``Implementation`` from the bundled brand SVG.
 
@@ -1575,7 +1599,7 @@ def _make_tool_handler(
             kwargs.pop("auth_sessionid", None)
             auth_sessionid = None
 
-        server_name = kwargs.get("server") or client_manager.default_server
+        server_name = kwargs.get("server") or _default_server_for_caller(client_manager)
         if not server_name:
             raise ToolError("No Zabbix server configured.")
 
@@ -1788,7 +1812,7 @@ def _register_tools(
         if _raw_err:
             raise ToolError(_raw_err)
 
-        server_name = server or client_manager.default_server
+        server_name = server or _default_server_for_caller(client_manager)
         if not server_name:
             raise ToolError("No Zabbix server configured.")
         try:
@@ -1881,7 +1905,7 @@ def _register_tools(
         _raw_err = _check_raw_json_allowed(bool(raw_json))
         if _raw_err:
             raise ToolError(_raw_err)
-        srv = client_manager.resolve_server(server or client_manager.default_server)
+        srv = client_manager.resolve_server(server or _default_server_for_caller(client_manager))
         _auth_err = check_token_authorization(srv, tool_prefix="graph")
         if _auth_err:
             raise ToolError(_auth_err)
@@ -1913,7 +1937,7 @@ def _register_tools(
         _raw_err = _check_raw_json_allowed(bool(raw_json))
         if _raw_err:
             raise ToolError(_raw_err)
-        srv = client_manager.resolve_server(server or client_manager.default_server)
+        srv = client_manager.resolve_server(server or _default_server_for_caller(client_manager))
         _auth_err = check_token_authorization(srv, tool_prefix="host")
         if _auth_err:
             raise ToolError(_auth_err)
@@ -1945,7 +1969,7 @@ def _register_tools(
         _raw_err = _check_raw_json_allowed(bool(raw_json))
         if _raw_err:
             raise ToolError(_raw_err)
-        srv = client_manager.resolve_server(server or client_manager.default_server)
+        srv = client_manager.resolve_server(server or _default_server_for_caller(client_manager))
         _auth_err = check_token_authorization(srv, tool_prefix="host")
         if _auth_err:
             raise ToolError(_auth_err)
@@ -1994,7 +2018,7 @@ def _register_tools(
         _raw_err = _check_raw_json_allowed(bool(raw_json))
         if _raw_err:
             raise ToolError(_raw_err)
-        srv = client_manager.resolve_server(server or client_manager.default_server)
+        srv = client_manager.resolve_server(server or _default_server_for_caller(client_manager))
         _auth_err = check_token_authorization(srv, tool_prefix="item")
         if _auth_err:
             raise ToolError(_auth_err)
@@ -2049,7 +2073,7 @@ def _register_tools(
         _raw_err = _check_raw_json_allowed(bool(raw_json))
         if _raw_err:
             raise ToolError(_raw_err)
-        srv = client_manager.resolve_server(server or client_manager.default_server)
+        srv = client_manager.resolve_server(server or _default_server_for_caller(client_manager))
         _auth_err = check_token_authorization(srv, tool_prefix="problem")
         if _auth_err:
             raise ToolError(_auth_err)
@@ -2082,7 +2106,7 @@ def _register_tools(
         _raw_err = _check_raw_json_allowed(bool(raw_json))
         if _raw_err:
             raise ToolError(_raw_err)
-        srv = client_manager.resolve_server(server or client_manager.default_server)
+        srv = client_manager.resolve_server(server or _default_server_for_caller(client_manager))
         # Composite read - require scope for every Zabbix endpoint we
         # internally call so a narrow-scoped token can't read problems
         # / items here that it could not pull via problem_get / item_get.
@@ -2115,7 +2139,7 @@ def _register_tools(
         _raw_err = _check_raw_json_allowed(bool(raw_json))
         if _raw_err:
             raise ToolError(_raw_err)
-        srv = client_manager.resolve_server(server or client_manager.default_server)
+        srv = client_manager.resolve_server(server or _default_server_for_caller(client_manager))
         # Composite read - covers hostgroup + member host + active problems.
         _auth_err = check_token_authorization(srv, tool_prefixes=[
             "hostgroup", "host", "problem", "trigger",
@@ -2144,7 +2168,7 @@ def _register_tools(
         _raw_err = _check_raw_json_allowed(bool(raw_json))
         if _raw_err:
             raise ToolError(_raw_err)
-        srv = client_manager.resolve_server(server or client_manager.default_server)
+        srv = client_manager.resolve_server(server or _default_server_for_caller(client_manager))
         # Composite read - aggregates host / item / trigger / template /
         # problem counts plus per-group breakdown. Requires scope for
         # every endpoint we sum over.
@@ -2178,7 +2202,7 @@ def _register_tools(
         _raw_err = _check_raw_json_allowed(bool(raw_json))
         if _raw_err:
             raise ToolError(_raw_err)
-        srv = client_manager.resolve_server(server or client_manager.default_server)
+        srv = client_manager.resolve_server(server or _default_server_for_caller(client_manager))
         # Composite read - item metadata + history + parent host name.
         _auth_err = check_token_authorization(srv, tool_prefixes=[
             "item", "history", "host",
@@ -2273,7 +2297,7 @@ def _register_tools(
             ) -> str | CallToolResult:
                 """Synchronous PDF generation - shared between sync and task-augmented paths."""
                 from zabbix_mcp.reporting import data_fetcher
-                srv = client_manager.resolve_server(server or client_manager.default_server)
+                srv = client_manager.resolve_server(server or _default_server_for_caller(client_manager))
                 _auth_err = check_token_authorization(srv, tool_prefix="host")
                 if _auth_err:
                     raise ToolError(_auth_err)
@@ -2517,7 +2541,7 @@ def _register_tools(
         """Prepare a write action for review before execution. Returns a preview
         of what will happen and a confirmation token. Use action_confirm with the
         token to actually execute it. Tokens expire after 5 minutes."""
-        srv = client_manager.resolve_server(server or client_manager.default_server)
+        srv = client_manager.resolve_server(server or _default_server_for_caller(client_manager))
 
         # Token authorization: server + write permission
         _prefix = action.split(".")[0].lower() if "." in action else ""

@@ -413,10 +413,7 @@ class AdminApp:
             from os import stat as _stat
             self._initial_config_dump = _tomlkit.dumps(
                 load_config_document(self.config_path))
-            try:
-                self._config_dump_mtime = _stat(self.config_path).st_mtime
-            except OSError:
-                self._config_dump_mtime = None
+            self._config_dump_mtime = None  # kept for API compatibility; no longer consulted
             self.restart_needed = False
         except Exception:
             # Never let snapshotting break startup or a registration.
@@ -425,29 +422,23 @@ class AdminApp:
     def _compute_restart_needed(self) -> bool:
         """Check if the on-disk config differs from the running snapshot.
 
-        Cheap because we read mtime first and only re-parse the TOML
-        when the file actually changed since the last check. Returns
-        the bool that base.html uses to decide whether to show the
-        "Restart needed" banner. When the operator reverts a change
-        and the disk version equals the running snapshot, the banner
-        clears automatically without needing the in-memory flag - so
-        Bug 17 ("flag stays sticky after revert") goes away.
+        Compares the file's *content* on every call. An earlier version
+        short-circuited on ``st_mtime`` equality to save the parse, which
+        opened a real gap (#80): on ext4 mtime moves in scheduler ticks,
+        so an edit landing in the same tick as the snapshot - the window
+        right after a start - was never noticed, and the tests only ever
+        saw it as flakiness on Linux. config.toml is a few kilobytes;
+        reading and dumping it per page render is not worth a cache that
+        depends on filesystem timestamp granularity.
+
+        Returns the bool that base.html uses for the "Restart needed"
+        banner. When the operator reverts a change and the disk version
+        equals the running snapshot, the banner clears on its own.
         """
         if self._initial_config_dump is None:
-            # Fall back to the in-memory flag when we could not
-            # snapshot at startup (e.g. tomlkit missing).
+            # Could not snapshot at startup (e.g. tomlkit missing) - the
+            # explicit flag set by the save handlers is all we have.
             return self.restart_needed
-        try:
-            from os import stat as _stat
-            mtime = _stat(self.config_path).st_mtime
-        except Exception:
-            return self.restart_needed
-        if mtime == self._config_dump_mtime:
-            # File unchanged since last check; reuse last result by
-            # falling through to the explicit flag.
-            return self.restart_needed
-        # File changed - re-parse and compare.
-        self._config_dump_mtime = mtime
         try:
             from zabbix_mcp.admin.config_writer import load_config_document
             import tomlkit as _tomlkit
@@ -455,8 +446,6 @@ class AdminApp:
         except Exception:
             return self.restart_needed
         differs = current != self._initial_config_dump
-        # Cache the result back on the explicit flag too so subsequent
-        # renders skip the I/O until the next mtime change.
         self.restart_needed = differs
         return differs
 

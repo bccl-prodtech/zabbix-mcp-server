@@ -72,6 +72,20 @@ class TestRestartBaseline(unittest.TestCase):
                 'redirect_uris = ["https://claude.ai/api/mcp/auth_callback"]\n'
             )
 
+    def test_edit_in_the_same_timestamp_tick_is_still_detected(self):
+        # #80 (ccurtis-kepler): the detector used to short-circuit on
+        # st_mtime equality. On ext4 mtime moves in scheduler ticks, so an
+        # edit in the same tick as the snapshot was invisible. Force the
+        # worst case: write, then give the file the exact mtime the
+        # snapshot saw.
+        import os
+        before = os.stat(self.path)
+        with open(self.path, "a") as fh:
+            fh.write('\n[zabbix.extra]\nurl = "https://extra.example.com"\napi_token = "x"\n')
+        os.utime(self.path, ns=(before.st_atime_ns, before.st_mtime_ns))
+        self.assertEqual(os.stat(self.path).st_mtime_ns, before.st_mtime_ns, "test precondition")
+        self.assertTrue(self.app._compute_restart_needed())
+
     def test_clean_start_has_no_pending_changes(self):
         self.assertFalse(self.app._compute_restart_needed())
 
