@@ -102,6 +102,28 @@ def check_token_authorization(
     return None
 
 
+def parse_expiry(value: str) -> datetime:
+    """Parse a token's ``expires_at`` into an aware UTC datetime.
+
+    The portal accepts ``YYYY-MM-DD``, ``YYYY-MM-DDTHH:MM:SS`` and the
+    same with a trailing ``Z``, and stores the string as typed.
+    ``datetime.fromisoformat`` only learned the ``Z`` suffix in Python
+    3.11; on 3.10 it raised ValueError, which the runtime check used to
+    log and then *ignore* - an expired token kept working. The suffix
+    is normalised here so every supported interpreter parses the same
+    strings, and a naive timestamp is read as UTC. Raises ValueError
+    for anything else; callers treat that as "not valid", never as
+    "no expiry".
+    """
+    text = value.strip()
+    if text.endswith(("Z", "z")):
+        text = text[:-1] + "+00:00"
+    parsed = datetime.fromisoformat(text)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
 @dataclass
 class TokenInfo:
     """Parsed token definition from config."""
@@ -141,9 +163,11 @@ class TokenInfo:
         if not self.expires_at:
             return False
         try:
-            return datetime.fromisoformat(self.expires_at) < datetime.now()
+            return parse_expiry(self.expires_at) < datetime.now(timezone.utc)
         except (ValueError, TypeError):
-            return False
+            # Unparseable: the runtime check refuses such a token, so
+            # "expired" is the honest badge.
+            return True
 
 
 class TokenStore:
@@ -296,14 +320,15 @@ class TokenStore:
         # Check expiration
         if info.expires_at:
             try:
-                expires = datetime.fromisoformat(info.expires_at)
-                if expires.tzinfo is None:
-                    expires = expires.replace(tzinfo=timezone.utc)
-                if datetime.now(timezone.utc) > expires:
-                    logger.warning("Token '%s' has expired (at %s)", info.id, info.expires_at)
-                    return None
-            except ValueError:
-                logger.warning("Token '%s' has invalid expires_at: %s", info.id, info.expires_at)
+                expires = parse_expiry(info.expires_at)
+            except (ValueError, TypeError):
+                # Fail closed. An expiry the server cannot read is not
+                # the same as no expiry - the operator set one.
+                logger.warning("Token '%s' has an unreadable expires_at (%r); refusing it", info.id, info.expires_at)
+                return None
+            if datetime.now(timezone.utc) > expires:
+                logger.warning("Token '%s' has expired (at %s)", info.id, info.expires_at)
+                return None
 
         # Check allowed IPs
         if info.allowed_ips and client_ip:
