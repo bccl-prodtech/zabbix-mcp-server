@@ -357,7 +357,6 @@ class AdminApp:
         # do that").
         self.restart_needed = False
         self._initial_config_dump: str | None = None
-        self._config_dump_mtime: float | None = None
         self._snapshot_config()
         # Expose the live instance so runtime config writers that do NOT
         # need a restart (OAuth dynamic client registration) can refresh
@@ -410,10 +409,8 @@ class AdminApp:
             if not TOMLKIT_AVAILABLE:
                 return
             import tomlkit as _tomlkit
-            from os import stat as _stat
             self._initial_config_dump = _tomlkit.dumps(
                 load_config_document(self.config_path))
-            self._config_dump_mtime = None  # kept for API compatibility; no longer consulted
             self.restart_needed = False
         except Exception:
             # Never let snapshotting break startup or a registration.
