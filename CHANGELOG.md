@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.36.2 - 2026-10-02
+
+Two contributed fixes. Thank you to both authors - and apologies that they waited; a Zabbix 8.0 release has been taking most of our capacity.
+
+### Fixed
+
+- **A broken weasyprint install took the whole server down at startup** ([#85](https://github.com/initMAX/zabbix-mcp-server/pull/85), by [@azullus](https://github.com/azullus)). When the weasyprint Python package is present but a native library it loads at import time is missing (`libpangoft2-1.0-0`, GDK-PixBuf), `import weasyprint` raises `OSError`, not `ImportError`. Both import guards only caught `ImportError`, so the exception escaped and the MCP server refused to start - for an optional feature. Both guards now catch `OSError` as well; the server starts with PDF reporting disabled and logs which library could not be loaded. README no longer suggests `pip install zabbix-mcp-server[reporting]`, since the package is not on PyPI.
+- **Two security tests asserted a rule the code had not followed since v1.15** ([#81](https://github.com/initMAX/zabbix-mcp-server/pull/81), by [@ccurtis-kepler](https://github.com/ccurtis-kepler)). `test_symlink_rejected` and `test_symlink_escaping_allowed_dir` still expected every symlink to be refused with a "symbolic link" error - the v1.11 rule. v1.15 replaced it with resolve-then-`O_NOFOLLOW`, under which a link is judged by where it points: inside `allowed_import_dirs` it is read, outside it is refused by the containment check. The tests now assert each outcome exactly. They had been failing on `main` on every platform; we had been misreading them as a macOS environment quirk. `release/v2.0.0` had already fixed them in `b72a7f3`.
+
+### Added
+
+- A regression test for the `OSError` guard that drives both real code paths - the engine module re-imported under a failing `import weasyprint`, and `_register_tools()` run against an engine whose attribute access raises - and is verified to fail on the pre-fix code.
+- `SECURITY.md` now states the symlink rule precisely (resolve, containment check on the resolved target, then `O_NOFOLLOW` open), since the old test names implied a stricter rule than the one actually enforced.
+
+### Verified
+
+- 430 unit + e2e tests, all passing - the first fully green suite since v1.15
+- CRUD smoke against live Zabbix; installer matrix 18/18
+
 ## v1.36.1 - 2026-08-07
 
 One display bug, reported within hours of v1.36 by [@G0nz0uk](https://github.com/G0nz0uk).

@@ -101,6 +101,7 @@ When `public_url`, `allowed_origins`, and `allowed_hosts` are all unset on a non
 - The `source_file` feature (for `configuration.import`) is disabled by default
 - To enable it, configure `allowed_import_dirs` with specific directories from which files may be read
 - Path traversal is blocked — only files within configured directories are accessible, validated with `Path.is_relative_to()`
+- Symlinks are judged by where they resolve, not by being links: the path is resolved first, the containment check runs on the resolved target, and the file is then opened with `O_NOFOLLOW` so the target cannot be swapped between check and open (no TOCTOU race). A link inside an allowed directory is readable; one pointing outside is refused by the containment check
 - SVG uploads sanitized: script tags, event handlers, javascript: URLs, and dangerous data URIs stripped
 - TLS private keys saved with `0600` permissions; TLS directory `0750`
 - Report template preview uses `SandboxedEnvironment` — prevents server-side template injection (SSTI)
@@ -132,7 +133,8 @@ The route is served outside the MCP endpoint's `TransportSecuritySettings`, so i
 
 | Version | Supported |
 |---|---|
-| 1.36.1 (latest) | Yes |
+| 1.36.2 (latest) | Yes |
+| 1.36.1 | Yes |
 | 1.36 | Yes |
 | 1.35 | Yes |
 | 1.34 | Yes |
