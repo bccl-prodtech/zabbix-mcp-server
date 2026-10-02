@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.37.1 - 2026-10-02
+
+Three security fixes, two of them from a contributor's fork. Please upgrade.
+
+### Fixed
+
+- **An expired MCP token kept working on Python 3.10** (found through a downstream fork's CI notes). The admin portal accepts an expiry written as `2026-12-31T23:59:59Z` and stores it as typed, but `datetime.fromisoformat` only accepts the `Z` suffix from Python 3.11. On 3.10 - the interpreter Ubuntu 22.04 ships - parsing raised, the runtime check logged "invalid expires_at" and then **let the token through**. The expiry is now parsed the same way on every supported interpreter (`Z` normalised, naive timestamps read as UTC), and an expiry the server cannot read refuses the token instead of ignoring it; the portal's token list shows such a token as Expired rather than Active. Verified under `python:3.10-slim`: the existing `test_expired_token` fails on the old code and passes now.
+- **`zabbix_raw_api_call` let `mediatype.test` through on a read-only server** (by [@ccurtis-kepler](https://github.com/ccurtis-kepler), from his `fix/raw-call-mediatype-test` branch). The fallback whitelist of read-only method suffixes contained `.test`; `mediatype.test` sends a real message through the media type. The suffix is gone; `userdirectory.test` stays read-only through its own tool definition.
+- **`action_confirm` executed on the authorization checked at `action_prepare` time** (by [@ccurtis-kepler](https://github.com/ccurtis-kepler), from his `fix/action-confirm-recheck` branch). The confirmation token was bound to the caller and expired after five minutes, but a token or server switched to read-only in between still wrote. The confirm call now re-runs the token authorization and the server's write check itself.
+
+### Verified
+
+- 495 unit + e2e tests, all passing on Python 3.14 and `tests.test_admin` + the new expiry tests on 3.10 in Docker. 17 new: the expiry parser (`Z`, naive, date-only, explicit offset, garbage), the store refusing an expired `Z` stamp, a naive stamp and an unreadable one while accepting a future one and no expiry at all, the Expired badge, `mediatype.test` refused on a read-only server, and `action_confirm` refusing after the server or the token turned read-only.
+- CRUD smoke against live Zabbix 7.4; installer matrix 18/18.
+
 ## v1.37 - 2026-10-02
 
 Legacy password login for Zabbix 5.0 and 5.2 - behind an explicit switch, version-locked, and loudly marked as what it is. Plus three fixes from the tracker: per-user tokens no longer need to name their server, the capacity report finds disk usage on current templates, and the "restart needed" detector no longer trusts file timestamps.
