@@ -1,6 +1,6 @@
 /* ==========================================================================
    Zabbix MCP Server — Admin Portal Design System
-   initMAX branded, dark/light mode, Rubik font
+   Branded, dark/light mode, Rubik font
    ========================================================================== */
 
 /* ---------- Font Faces ---------- */
@@ -2590,3 +2590,5 @@ table.tokens-list td.col-actions .btn-sm {
 }
 /* These three are applied by the edge-flip script in base.html; the
    markup never needs to know where on the page it will land. */
+
+.brand-name { font-weight: 700; letter-spacing: 0.02em; }

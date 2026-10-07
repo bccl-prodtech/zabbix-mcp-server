@@ -1,6 +1,5 @@
 #
 # Zabbix MCP Server
-# Copyright (C) 2026 initMAX s.r.o.
 #
 
 """Settings view — display and edit all config.toml sections."""

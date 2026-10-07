@@ -17,7 +17,7 @@ We are committed to providing a welcoming and professional environment for every
 
 ## Enforcement
 
-Instances of unacceptable behavior may be reported to [info@initmax.com](mailto:info@initmax.com). All reports will be reviewed and addressed appropriately.
+Instances of unacceptable behavior may be reported to the project maintainers. All reports will be reviewed and addressed appropriately.
 
 ## Scope
 

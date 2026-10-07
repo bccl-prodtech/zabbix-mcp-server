@@ -1,6 +1,5 @@
 #
 # Zabbix MCP Server
-# Copyright (C) 2026 initMAX s.r.o.
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -24,13 +23,13 @@ RUN python -m venv /opt/zabbix-mcp/venv \
 
 FROM python:3.13.5-slim
 
-LABEL maintainer="initMAX s.r.o. <info@initmax.com>"
 LABEL org.opencontainers.image.title="Zabbix MCP Server"
 LABEL org.opencontainers.image.description="MCP server for the complete Zabbix API"
-LABEL org.opencontainers.image.source="https://github.com/initMAX/zabbix-mcp-server"
-LABEL org.opencontainers.image.url="https://github.com/initMAX/zabbix-mcp-server"
-LABEL org.opencontainers.image.documentation="https://github.com/initMAX/zabbix-mcp-server/blob/main/README.md"
-LABEL org.opencontainers.image.vendor="initMAX s.r.o."
+LABEL org.opencontainers.image.source="https://github.com/bccl-prodtech/zabbix-mcp-server"
+LABEL org.opencontainers.image.url="https://github.com/bccl-prodtech/zabbix-mcp-server"
+LABEL org.opencontainers.image.documentation="https://github.com/bccl-prodtech/zabbix-mcp-server/blob/main/README.md"
+LABEL maintainer="Times of India (BCCL)"
+LABEL org.opencontainers.image.vendor="Times of India (BCCL)"
 LABEL org.opencontainers.image.licenses="AGPL-3.0-only"
 LABEL org.opencontainers.image.version="1.37"
 

@@ -1,6 +1,5 @@
 #
 # Zabbix MCP Server
-# Copyright (C) 2026 initMAX s.r.o.
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -51,7 +50,7 @@ logger = logging.getLogger("zabbix_mcp.admin.update_check")
 
 # GitHub releases endpoint - public, no auth, 60 req/h per IP. We hit
 # it at most once an hour so the rate limit is not a concern.
-RELEASES_URL = "https://api.github.com/repos/initMAX/zabbix-mcp-server/releases/latest"
+RELEASES_URL = "https://api.github.com/repos/bccl-prodtech/zabbix-mcp-server/releases/latest"
 # Cache lives next to the audit log + config dir which is always
 # writable by the service user (chown'd by the installer / Docker
 # entrypoint). /var/lib/zabbix-mcp does not exist in the container

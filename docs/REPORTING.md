@@ -2,7 +2,7 @@
 
 > **Status: BETA**
 >
-> Server-side PDF reporting was introduced in v1.16. The 4 built-in templates are stable, but the authoring API, the set of context variables, and the admin editor UI are still evolving. Feedback (what's missing, what's confusing, what should be configurable) is very welcome at [issues](https://github.com/initMAX/zabbix-mcp-server/issues).
+> Server-side PDF reporting was introduced in v1.16. The 4 built-in templates are stable, but the authoring API, the set of context variables, and the admin editor UI are still evolving. Feedback (what's missing, what's confusing, what should be configurable) is very welcome at [issues](https://github.com/bccl-prodtech/zabbix-mcp-server/issues).
 >
 > **Why server-side reports?** LLMs cannot reliably produce consistent, well-formatted reports on their own. Templates make the output deterministic: the model picks the report type and parameters, the server fetches data from Zabbix, fills a Jinja2 template, and renders it to PDF. Same input -> same output, every time.
 
@@ -134,7 +134,7 @@ The recommended flow:
 1. Open the admin portal (`http://<host>:9090`) -> **Templates**.
 2. Click **Create new** (or **Duplicate** on a built-in to start from a working template).
 3. Edit in the GrapesJS visual editor (drag & drop blocks: Header, Title, Info Table, Host Table, SLA Gauge, Graph) or switch to the **HTML** tab for direct Jinja2.
-4. Use **Preview** for a server-side render with sample data and the initMAX logo as a fallback.
+4. Use **Preview** for a server-side render with sample data and the bundled logo as a fallback.
 5. Save - the portal writes the HTML to `/etc/zabbix-mcp/templates/<name>.html` and adds a `[report_templates.<name>]` section to `config.toml`.
 6. Click **Restart** when the badge appears to load the new template into the running server.
 
@@ -228,7 +228,7 @@ If you `{% extends "base.html" %}`, the following classes are pre-styled:
 | `.check` / `.cross` | Green check / red cross glyphs |
 | `.page-break` | Force a page break before the element |
 
-The default font is Helvetica Neue / Arial 10pt, table headers use the initMAX red (`#d32f2f`), and pagination ("Page N/M") + `generated_at` are rendered automatically in the page footer via WeasyPrint `@page` rules.
+The default font is Helvetica Neue / Arial 10pt, table headers use the red (`#d32f2f`), and pagination ("Page N/M") + `generated_at` are rendered automatically in the page footer via WeasyPrint `@page` rules.
 
 ### Worked example: simple problems summary
 

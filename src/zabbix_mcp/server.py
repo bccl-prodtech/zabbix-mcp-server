@@ -1,6 +1,5 @@
 #
 # Zabbix MCP Server
-# Copyright (C) 2026 initMAX s.r.o.
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -1309,7 +1308,7 @@ def _load_server_icons() -> list[Icon] | None:
 
     MCP 2025-11-25 lets servers advertise icons that clients (Inspector,
     Claude Desktop, ...) render next to the server name. We embed the
-    initMAX symbol SVG inline as a ``data:`` URI so the icon does not
+    bundled symbol SVG inline as a ``data:`` URI so the icon does not
     depend on a reachable external URL or a separate static-file
     endpoint - the few KB cost is paid once per ``initialize``.
     """
@@ -3125,7 +3124,7 @@ def run_server(
             "and 'limit' parameters. Write operations (create/update/delete) are only "
             "allowed on servers not configured as read_only."
         ),
-        website_url="https://github.com/initMAX/zabbix-mcp-server",
+        website_url="https://github.com/bccl-prodtech/zabbix-mcp-server",
         icons=_load_server_icons(),
         extensions=[_tasks_extension],
         **auth_kwargs,

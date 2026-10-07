@@ -1,28 +1,22 @@
 <div align="center">
-    <a href="https://github.com/initMAX/zabbix-mcp-server"><img src="./.readme/zabbix-mcp-server-preview.png" alt="Zabbix MCP Server" width="700"></a>
+    <a href="https://github.com/bccl-prodtech/zabbix-mcp-server"><img src="./.readme/zabbix-mcp-server-preview.png" alt="Zabbix MCP Server" width="700"></a>
 </div>
 <br>
 
 <div align="center">
+    <img src="./.readme/logo/toi-logo.png" alt="Times of India" width="96"><br>
     <h1>
         Zabbix MCP Server
     </h1>
-    <p>
-        developed and maintained by
-        <a href="https://www.initmax.com"><img alt="initMAX" src="./.readme/logo/initmax-logo-framed.svg" height="24" valign="middle"></a>
-        and community
-    </p>
+    <p>maintained by <b>Times of India</b> (Bennett, Coleman &amp; Co. Ltd.)</p>
     <h4>
         Full Zabbix API access from Claude, Codex, VS Code, JetBrains, and other MCP clients.
     </h4>
     <br>
-    <a href="https://github.com/initMAX/zabbix-mcp-server/releases"><img alt="Version" src="https://img.shields.io/github/v/release/initMAX/zabbix-mcp-server?color=%231f65f4&label=version"></a>&nbsp;
     <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-blue"></a>&nbsp;
     <img alt="Python" src="https://img.shields.io/badge/python-3.10%2B-blue">&nbsp;
     <img alt="Tools" src="https://img.shields.io/badge/tools-237-green">&nbsp;
     <img alt="Zabbix" src="https://img.shields.io/badge/zabbix-5.0%E2%80%948.0-red">&nbsp;
-    <a href="https://safeskill.dev/scan/initmax-zabbix-mcp-server"><img alt="SafeSkill" src="https://img.shields.io/badge/SafeSkill-100%2F100_Verified%20Safe-brightgreen"></a>&nbsp;
-    <a href="https://mcptoplist.com/server/glama%2FinitMAX%2Fzabbix-mcp-server"><img alt="MCP Toplist" src="https://mcptoplist.com/badge/glama%2FinitMAX%2Fzabbix-mcp-server.svg"></a>
 </div>
 <br>
 <br>
@@ -66,7 +60,7 @@ The server runs as a standalone HTTP service. AI clients connect to it over the 
 ## Quick Start
 
 ```bash
-git clone https://github.com/initMAX/zabbix-mcp-server.git
+git clone https://github.com/bccl-prodtech/zabbix-mcp-server.git
 cd zabbix-mcp-server
 sudo ./deploy/install.sh
 sudo nano /etc/zabbix-mcp/config.toml   # fill in your Zabbix URL + API token
@@ -89,7 +83,7 @@ Done. The server is running on `http://127.0.0.1:8080/mcp`.
 ### Install
 
 ```bash
-git clone https://github.com/initMAX/zabbix-mcp-server.git
+git clone https://github.com/bccl-prodtech/zabbix-mcp-server.git
 cd zabbix-mcp-server
 sudo ./deploy/install.sh
 ```
@@ -115,7 +109,7 @@ For developers running the server locally on their own machine, an alternative i
 
 It detects Python 3.10+, creates a virtualenv inside the repo, copies `config.example.toml` to `config.toml` (with `log_file` rewritten to a user-writable path), and registers a background service:
 
-- **macOS** - LaunchAgent at `~/Library/LaunchAgents/com.initmax.zabbix-mcp-server.plist` (auto-restart via `KeepAlive`)
+- **macOS** - LaunchAgent at `~/Library/LaunchAgents/com.bccl.zabbix-mcp-server.plist` (auto-restart via `KeepAlive`)
 - **Linux** - systemd `--user` unit at `~/.config/systemd/user/zabbix-mcp-server.service` with `loginctl enable-linger` so the service survives logout
 
 This is intended for local development. For production servers use the regular `sudo ./deploy/install.sh` above.
@@ -431,19 +425,19 @@ The installer generates an admin password automatically. To reset: `sudo ./deplo
 | MCP Tokens | Create, revoke, per-token scope control (group + individual tool level), **per-token Zabbix server binding**, IP restrictions, expiry, read-only flag; legacy token migration with tooltip |
 | Tool Exposure | Drag & drop bubble UI for enabling/disabling tools globally and per-token; groups + individual tool prefixes; globally disabled tools shown as locked in token scopes |
 | Zabbix Servers | Connection status with **API + token validation** (detects "API online but token invalid"), version display, test connection, add/edit/delete |
-| Client MCP Wizard (beta) | Point-and-click generator: pick a Zabbix server -> pick a token (or skip auth) -> pick one of 14 AI clients -> get a copy-paste-ready config snippet + per-client install instructions. Handles URL composition, `0.0.0.0` host override, transport picker, token substitution in the snippet and curl test. **Feedback wanted** - please report issues at https://github.com/initMAX/zabbix-mcp-server/issues. |
+| Client MCP Wizard (beta) | Point-and-click generator: pick a Zabbix server -> pick a token (or skip auth) -> pick one of 14 AI clients -> get a copy-paste-ready config snippet + per-client install instructions. Handles URL composition, `0.0.0.0` host override, transport picker, token substitution in the snippet and curl test. **Feedback wanted** - please report issues at https://github.com/bccl-prodtech/zabbix-mcp-server/issues. |
 | Users | Admin / operator / viewer roles; password complexity enforcement (10+ chars, uppercase, digit) |
 | Report Templates | Built-in + custom templates, GrapesJS visual editor with Zabbix blocks, HTML code editor, variable picker, server-side Jinja2 preview |
 | Settings | All config.toml sections editable — MCP Server, TLS & Security, Tool Exposure (allowlist + denylist), PDF Reports & Branding, Admin Portal |
 | Audit Log | All admin actions logged (JSON lines), filterable by date/action/user, CSV export |
 | Restart Management | Blikající "Restart needed" badge in header after config changes; click to restart with progress bar polling until MCP is back online |
-| Design | initMAX branded, dark/light/auto mode, Rubik font, instant CSS tooltips, responsive mobile layout |
+| Design | Branded, dark/light/auto mode, Rubik font, instant CSS tooltips, responsive mobile layout |
 
 All changes are written back to `config.toml` (preserving comments and formatting via tomlkit). Every config change triggers a "Restart needed" indicator.
 
 #### Client MCP Wizard (beta)
 
-> **Beta** - introduced in v1.20 with 14 supported clients and wide test coverage, but we are still collecting real-world feedback on the per-client snippets, the OAuth-vs-Bearer handling (especially Claude Desktop + ChatGPT), and edge cases around Docker / NAT / reverse-proxy host overrides. Please report issues at https://github.com/initMAX/zabbix-mcp-server/issues so we can graduate it out of beta.
+> **Beta** - introduced in v1.20 with 14 supported clients and wide test coverage, but we are still collecting real-world feedback on the per-client snippets, the OAuth-vs-Bearer handling (especially Claude Desktop + ChatGPT), and edge cases around Docker / NAT / reverse-proxy host overrides. Please report issues at https://github.com/bccl-prodtech/zabbix-mcp-server/issues so we can graduate it out of beta.
 
 A standalone page at `/wizard` (sidebar entry **Client MCP Wizard**) that replaces hand-editing JSON / TOML config files for 14 AI clients. Single-page progressive disclosure in four steps:
 
@@ -474,7 +468,7 @@ Every snippet and instruction set comes from a single-source-of-truth catalog (`
 ### Docker
 
 ```bash
-git clone https://github.com/initMAX/zabbix-mcp-server.git
+git clone https://github.com/bccl-prodtech/zabbix-mcp-server.git
 cd zabbix-mcp-server
 cp config.example.toml config.toml
 nano config.toml                        # fill in your Zabbix details
@@ -521,7 +515,7 @@ python3 -m venv /opt/zabbix-mcp/venv
 
 ## Connecting AI Clients
 
-> **Recommended (beta):** use the **[Client MCP Wizard](#client-mcp-wizard-beta)** in the admin portal at `/wizard`. It generates copy-paste-ready config snippets for 14 AI clients (Claude Desktop, Codex, Cursor, Cline, VS Code Copilot, JetBrains AI, Goose, Open WebUI, 5ire, Gemini CLI, n8n, Claude Code, ChatGPT, Generic) with the correct URL, transport, and Bearer header substitution. Still beta - feedback welcome at https://github.com/initMAX/zabbix-mcp-server/issues. The manual instructions below stay for reference.
+> **Recommended (beta):** use the **[Client MCP Wizard](#client-mcp-wizard-beta)** in the admin portal at `/wizard`. It generates copy-paste-ready config snippets for 14 AI clients (Claude Desktop, Codex, Cursor, Cline, VS Code Copilot, JetBrains AI, Goose, Open WebUI, 5ire, Gemini CLI, n8n, Claude Code, ChatGPT, Generic) with the correct URL, transport, and Bearer header substitution. Still beta - feedback welcome at https://github.com/bccl-prodtech/zabbix-mcp-server/issues. The manual instructions below stay for reference.
 
 The server uses the **Streamable HTTP** transport by default and listens on `http://127.0.0.1:8080/mcp`. SSE transport is also available (`http://127.0.0.1:8080/sse`) for clients that do not support Streamable HTTP session management.
 
@@ -928,7 +922,7 @@ All tools accept an optional `server` parameter to target a specific Zabbix inst
 
 The `report_generate` tool produces professional PDF reports from Zabbix data. Reports are rendered server-side with Jinja2 templates and WeasyPrint - the LLM only chooses the report type and parameters, so the output is deterministic and consistent across runs.
 
-> **Beta status:** Reporting (templates, custom template authoring, admin editor) is a first-concept feature shipped in v1.16. Built-in templates are stable, but the authoring API and template inventory may change. Feedback welcome at [issues](https://github.com/initMAX/zabbix-mcp-server/issues).
+> **Beta status:** Reporting (templates, custom template authoring, admin editor) is a first-concept feature shipped in v1.16. Built-in templates are stable, but the authoring API and template inventory may change. Feedback welcome at [issues](https://github.com/bccl-prodtech/zabbix-mcp-server/issues).
 
 **Built-in templates:**
 
@@ -1125,7 +1119,7 @@ Disable in offline / air-gapped environments by setting:
 update_check_enabled = false
 ```
 
-This is the only outbound HTTPS request the admin portal makes. It goes to `https://api.github.com/repos/initMAX/zabbix-mcp-server/releases/latest` and reads only the latest stable tag (pre-releases and drafts are skipped). Failed checks (offline, rate limited, DNS) are silent and reuse the last successful answer cached at `/etc/zabbix-mcp/state/version-cache.json`.
+This is the only outbound HTTPS request the admin portal makes. It goes to `https://api.github.com/repos/bccl-prodtech/zabbix-mcp-server/releases/latest` and reads only the latest stable tag (pre-releases and drafts are skipped). Failed checks (offline, rate limited, DNS) are silent and reuse the last successful answer cached at `/etc/zabbix-mcp/state/version-cache.json`.
 
 The same toggle is also exposed in the admin portal at `Settings -> Admin Portal -> Check for updates`.
 
@@ -1265,7 +1259,7 @@ Two operator-visible knobs come with the 2026-07-28 revision:
 ## Development
 
 ```bash
-git clone https://github.com/initMAX/zabbix-mcp-server.git
+git clone https://github.com/bccl-prodtech/zabbix-mcp-server.git
 cd zabbix-mcp-server
 python3 -m venv .venv
 source .venv/bin/activate
@@ -1282,62 +1276,8 @@ npx @modelcontextprotocol/inspector zabbix-mcp-server --config config.toml
 
 | Project | Description |
 |---------|-------------|
-| [Zabbix AI Skills](https://github.com/initMAX/zabbix-ai-skills) | 35 ready-to-use AI workflows for Zabbix — maintenance windows, host onboarding, template upgrades, audits, and more |
 
 ## License
 
 AGPL-3.0 - see [LICENSE](LICENSE).
 
-## About initMAX
-
-<div align="center">
-    <a href="http://www.initmax.com"><img src="./.readme/logo/initMAX_banner.png" alt="initMAX Logo" width="400"></a>
-    <h3>
-        <span>
-            Honesty, diligence and MAXimum knowledge of our products is our standard.
-        </span>
-    </h3>
-    <h3>
-        <a><img src="./.readme/logo/zabbix-premium-partner.png" alt="Zabbix premium partner" width="100"></a>&nbsp;&nbsp;&nbsp;
-        <a><img src="./.readme/logo/zabbix-certified-trainer.png" alt="Zabbix certified trainer" width="100"></a>
-    </h3>
-</div>
-
-initMAX is an international Zabbix Premium Partner and Certified Trainer with offices in **the United States**, **the Czech Republic**, and **Slovakia**. We build, deploy, and support Zabbix infrastructure for organizations across North America and Europe, and this server is part of a wider effort to integrate Zabbix into modern AI-assisted operations workflows.
-
-<div align="center">
-    <h4>
-        <a href="https://www.initmax.com/">
-            <img alt="Static Badge" src="https://img.shields.io/badge/initMAX.com-%20?color=%231f65f4&logo=data:image/png;base64,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">
-        </a>
-        <a href="tel:+420800244442">
-            <img alt="Static Badge" src="https://img.shields.io/badge/+420%20800%20244%20442-%20?color=%231f65f4&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAACEElEQVR4nO3ZzYtNYRzA8Z/XUWJDGKJk5WUpWUrsyEYUNanBn6D8BbLDCv+BxcR4jSxQkxoLRnmLImXl5UZIqI9OcxY3Zu7c59zuuc9kPn/B/fac+5zn+Z2IGTN6B3swii94gK0xnWAezvpXA6tiOsAiXDe5a5E7rMQTUxuIXGE5XmjPJ/RHbjAfI9IMR25wXDUHIyd4UzHkA1ZELvBVdUORC7zUmf2RAwx1GPI8coCjHYZ8jxxgGX53EHI/coHbHYQM5HbSreIRZkcuMAtjFUJ2Rm6wL7HicuTI+KrcSwgZjFxhI34mnILXRa5wMmFVHmJh5Ah95Q9sV7F190WOsAHfEmIuYm7kCEekOV9sGJEjE09TWjkVGY+G7iTGnM5yZYwPJl5VeMzmRG6wBm8TYy5hQeQGm/AxMebmRO+ZYrVwqBzF/sKz4ohUZ8yWchacYqz5BIDtLd5TV4pBYV0xO/AjMaY4zgziapvTmQN13l9SY1T4j/XXEbOtwmOWqlHMFOqI2Yz3uu8GVtdx9H9XQ0yj2Gy6HbO2wkuzitGuhjSNlVJumFV87npI0yeKc10MGaklpCnocOJ9pl27ag0pY9Yn3jSncqb2iL+uzScSBhqttt/e30DLLfquah5jcWQ2N9ub+Lg9Le5DkaMyaDdulUf4yRRb+dKYDrCkPBVfKD4YlZ8BX+NYcc3u9e+b8d/6A8BzVur0abPMAAAAAElFTkSuQmCC">
-        </a>
-        <a href="mailto:info@initmax.com">
-            <img alt="Static Badge" src="https://img.shields.io/badge/info%40initmax.com-%20?color=%231f65f4&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0yMCA0SDRjLTEuMSAwLTIgLjktMiAydjEyYzAgMS4xLjkgMiAyIDJoMTZjMS4xIDAgMi0uOSAyLTJWNmMwLTEuMS0uOS0yLTItMnptMCA0bC04IDUtOC01VjZsOCA1IDgtNXYyeiIvPjwvc3ZnPg==">
-        </a>
-        <br>
-        <a href="https://www.linkedin.com/company/initmax/">
-            <img alt="LinkedIn" src="https://img.shields.io/badge/%20-%20?style=social&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHJvbGU9ImltZyIgdmlld0JveD0iMCAwIDI0IDI0Ij4KICA8dGl0bGU+TGlua2VkSW48L3RpdGxlPgogIDxwYXRoIGZpbGw9IiMwQTY2QzIiIGQ9Ik0yMC40NDcgMjAuNDUyaC0zLjU1NHYtNS41NjljMC0xLjMyOC0uMDI3LTMuMDM3LTEuODUyLTMuMDM3LTEuODUzIDAtMi4xMzYgMS40NDUtMi4xMzYgMi45Mzl2NS42NjdIOS4zNTFWOWgzLjQxNXYxLjU2MWguMDQ5Yy40NzYtLjkgMS42MzctMS44NTIgMy4zNjgtMS44NTIgMy41OTkgMCA0LjI2NyAyLjM2OSA0LjI2NyA1LjQ1NXY2LjI4OHpNNS4zMzcgNy40MzNjLTEuMTQ0IDAtMi4wNjktLjkyNi0yLjA2OS0yLjA2OCAwLTEuMTQzLjkyNS0yLjA2OSAyLjA2OS0yLjA2OSAxLjE0MiAwIDIuMDY4LjkyNiAyLjA2OCAyLjA2OSAwIDEuMTQyLS45MjYgMi4wNjgtMi4wNjggMi4wNjh6bTEuNzc3IDEzLjAxOUgzLjU2VjloMy41NTR2MTEuNDUyek0yMi4yMjUgMEgxLjc3MUMuNzkyIDAgMCAuNzc0IDAgMS43Mjl2MjAuNTQyQzAgMjMuMjI3Ljc5MiAyNCAxLjc3MSAyNGgyMC40NTFDMjMuMiAyNCAyNCAyMy4yMjcgMjQgMjIuMjcxVjEuNzI5QzI0IC43NzQgMjMuMiAwIDIyLjIyMiAwaC4wMDN6Ii8+Cjwvc3ZnPgo=">
-        </a>&nbsp;
-        <a href="https://www.youtube.com/@initmax1">
-            <img alt="Static Badge" src="https://img.shields.io/badge/%20-web?style=social&logo=youtube">
-        </a>&nbsp;
-        <a href="https://www.facebook.com/initmax">
-            <img alt="Static Badge" src="https://img.shields.io/badge/%20-%20?style=social&logo=facebook">
-        </a>&nbsp;
-        <a href="https://www.instagram.com/initmax/">
-            <img alt="Static Badge" src="https://img.shields.io/badge/%20-%20?style=social&logo=instagram">
-        </a>&nbsp;
-        <a href="https://twitter.com/initmax">
-            <img alt="Static Badge" src="https://img.shields.io/badge/%20-%20?style=social&logo=x">
-        </a>&nbsp;
-        <a href="https://github.com/initmax">
-            <img alt="Static Badge" src="https://img.shields.io/badge/%20-%20?style=social&logo=github">
-        </a>
-        <br><br><br>
-        <a>
-            <img src="./.readme/logo/agplv3.png" width="100">
-        </a>
-    </h4>
-</div>

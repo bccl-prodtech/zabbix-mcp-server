@@ -1,6 +1,5 @@
 {#
   Zabbix MCP Server
-  Copyright (C) 2026 initMAX s.r.o.
   Licensed under the GNU Affero General Public License v3.
   See LICENSE for details.
 #}
@@ -37,9 +36,7 @@
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <a href="/" class="logo" style="text-decoration:none;">
-                <img src="/static/logo-symbol-white.svg" alt="initMAX" class="logo-dark-theme" style="height: 28px;">
-                <img src="/static/logo-symbol-color.svg" alt="initMAX" class="logo-light-theme" style="height: 28px;">
-                <span class="logo-text">Zabbix MCP</span>
+                <img src="/static/logo-symbol-color.svg" alt="Times of India" style="height: 28px; vertical-align: middle; margin-right: 8px;"><span class="logo-text">Zabbix MCP</span>
             </a>
         </div>
         <ul class="nav-menu">
@@ -63,8 +60,8 @@
                 <span class="nav-icon">&#x1F4CB;</span> Audit Log</a></li>
         </ul>
         <div class="sidebar-footer">
-            <span class="version">v{{ version }} &middot; <a href="https://github.com/initMAX/zabbix-mcp-server" target="_blank">Documentation</a></span>
-            <span class="copyright"><a href="https://www.initmax.com" target="_blank">&copy; initMAX s.r.o.</a></span>
+            <span class="version">v{{ version }} &middot; <a href="https://github.com/bccl-prodtech/zabbix-mcp-server" target="_blank">Documentation</a></span>
+            <span class="copyright">&copy; Times of India</span>
         </div>
     </nav>
 
@@ -79,7 +76,7 @@
             <span class="restart-badge" style="cursor:pointer;" onclick="triggerRestart()" title="Click to restart MCP server">&#x26A0;&#xFE0F; Restart needed</span>
             {% endif %}
             {% if update_info and update_info.available %}
-            <a href="{{ update_info.release_url | default('https://github.com/initMAX/zabbix-mcp-server/releases/latest', true) }}"
+            <a href="{{ update_info.release_url | default('https://github.com/bccl-prodtech/zabbix-mcp-server/releases/latest', true) }}"
                target="_blank" rel="noopener"
                class="update-badge"
                id="update-pill"

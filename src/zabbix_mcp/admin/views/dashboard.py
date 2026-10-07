@@ -1,6 +1,5 @@
 #
 # Zabbix MCP Server
-# Copyright (C) 2026 initMAX s.r.o.
 #
 
 """Dashboard view — overview of server status, tokens, recent activity."""

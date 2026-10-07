@@ -4,7 +4,7 @@ Two scripts live here. Both target the running MCP server's HTTP transport
 via the official `mcp` Python SDK; they are part of the pre-release ritual
 documented in `CONTRIBUTING.md`. Wire-compatible with any Zabbix MCP
 deployment, but the canonical target is the `Wiki-topics` test instance
-(`https://student-postgresql-01.initmax.cz`).
+(`https://mcp.example.internal`).
 
 ## `test_all_tools.py` - synthetic CRUD coverage
 

@@ -1,6 +1,5 @@
 #
 # Zabbix MCP Server
-# Copyright (C) 2026 initMAX s.r.o.
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -783,7 +782,7 @@ def item_threshold_search(
 #
 # Original concept and implementation by @fenbays
 # (https://github.com/fenbays/zabbix-mcp-server, commit b38eeb2).
-# Ported and adapted to initMAX style: English-only, hostgroup/severity
+# Ported and adapted to house style: English-only, hostgroup/severity
 # overrides, no Zabbix-version compatibility fallbacks (we target 6.4+),
 # reuses _filter_active_problems so problem_get(monitored=True) and
 # problem_active_get share the same filter pass.

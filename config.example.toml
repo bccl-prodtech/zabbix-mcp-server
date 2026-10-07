@@ -1,6 +1,5 @@
 #
 # Zabbix MCP Server Configuration
-# Copyright (C) 2026 initMAX s.r.o.
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -156,7 +155,7 @@ compact_output = true
 # file and the [report_templates.*] section automatically.
 #
 # This is currently a beta / first concept - feedback welcome at
-# https://github.com/initMAX/zabbix-mcp-server/issues
+# https://github.com/bccl-prodtech/zabbix-mcp-server/issues
 #
 # See docs/REPORTING.md for an authoring guide and the list of Jinja2
 # context variables exposed by each report type.
@@ -270,7 +269,7 @@ compact_output = true
 # Default (all tools):
 # tools = ["monitoring", "data_collection", "alerts", "users", "administration", "extensions"]
 #
-# The "extensions" group contains initMAX value-add tools that sit on top of
+# The "extensions" group contains value-add tools that sit on top of
 # the raw Zabbix API: graph_render, anomaly_detect, capacity_forecast,
 # report_generate (PDF reports), action_prepare / action_confirm (two-step
 # write approval), health_check, and zabbix_raw_api_call. Omit it from

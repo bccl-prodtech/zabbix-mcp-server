@@ -1,6 +1,5 @@
 {#
   Zabbix MCP Server
-  Copyright (C) 2026 initMAX s.r.o.
   Licensed under the GNU Affero General Public License v3.
   See LICENSE for details.
 #}
@@ -283,9 +282,9 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="_cfg_mtime" value="{{ config_mtime | default('') }}">
         <div class="settings-row">
-            <div class="settings-label">Company Name <span class="tooltip-icon" tabindex="0" data-tooltip="Displayed in PDF report headers (e.g. 'initMAX / Availability Report'). Visible to anyone the report is shared with.">&#x1F6C8;</span></div>
+            <div class="settings-label">Company Name <span class="tooltip-icon" tabindex="0" data-tooltip="Displayed in PDF report headers (e.g. 'Times of India / Availability Report'). Visible to anyone the report is shared with.">&#x1F6C8;</span></div>
             <div>
-                <input type="text" name="report_company" class="form-input" value="{{ settings.report_company | default('') }}" placeholder="initMAX s.r.o.">
+                <input type="text" name="report_company" class="form-input" value="{{ settings.report_company | default('') }}" placeholder="Times of India">
                 <div class="form-hint">Displayed in report headers (e.g. "Company / Availability Report").</div>
             </div>
         </div>

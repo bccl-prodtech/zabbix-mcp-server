@@ -8,7 +8,7 @@ If you discover a security vulnerability in Zabbix MCP Server, please report it 
 
 Instead, contact us directly:
 
-- **Email:** [info@initmax.com](mailto:info@initmax.com)
+- **Email:** your internal security contact
 - **Subject:** `[SECURITY] Zabbix MCP Server — <brief description>`
 
 We will acknowledge your report within 48 hours and work with you on a fix.

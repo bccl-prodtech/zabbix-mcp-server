@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #
 # Zabbix MCP Server - Install / Update script
-# Copyright (C) 2026 initMAX s.r.o.
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -581,7 +580,7 @@ install_systemd_unit() {
     cat > "/etc/systemd/system/${SERVICE_NAME}.service" <<'UNIT'
 [Unit]
 Description=Zabbix MCP Server
-Documentation=https://github.com/initMAX/zabbix-mcp-server
+Documentation=https://github.com/bccl-prodtech/zabbix-mcp-server
 After=network.target
 
 [Service]
@@ -991,11 +990,11 @@ do_install() {
         echo "    Admin portal:   http://${active_host}:9090"
     fi
     echo
-    echo "  Changelog:    https://github.com/initMAX/zabbix-mcp-server/blob/main/CHANGELOG.md"
+    echo "  Changelog:    https://github.com/bccl-prodtech/zabbix-mcp-server/blob/main/CHANGELOG.md"
     echo "  (new features, security fixes, new config options)"
     echo
-    echo "  Feedback:     https://github.com/initMAX/zabbix-mcp-server/issues"
-    echo "  Discussions:  https://github.com/initMAX/zabbix-mcp-server/discussions"
+    echo "  Feedback:     https://github.com/bccl-prodtech/zabbix-mcp-server/issues"
+    echo "  Discussions:  https://github.com/bccl-prodtech/zabbix-mcp-server/discussions"
     echo "  We appreciate bug reports, feature requests, and community feedback!"
     echo
     echo "  Note: This git repository ($SCRIPT_DIR) is not required"
@@ -1134,11 +1133,11 @@ do_update() {
     echo
     ok "=== Update complete ==="
     echo
-    echo "  Changelog:    https://github.com/initMAX/zabbix-mcp-server/blob/main/CHANGELOG.md"
+    echo "  Changelog:    https://github.com/bccl-prodtech/zabbix-mcp-server/blob/main/CHANGELOG.md"
     echo "  (new features, security fixes, new config options)"
     echo
-    echo "  Feedback:     https://github.com/initMAX/zabbix-mcp-server/issues"
-    echo "  Discussions:  https://github.com/initMAX/zabbix-mcp-server/discussions"
+    echo "  Feedback:     https://github.com/bccl-prodtech/zabbix-mcp-server/issues"
+    echo "  Discussions:  https://github.com/bccl-prodtech/zabbix-mcp-server/discussions"
     echo "  We appreciate bug reports, feature requests, and community feedback!"
     echo
 }

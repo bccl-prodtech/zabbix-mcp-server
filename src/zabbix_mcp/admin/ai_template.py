@@ -1,6 +1,5 @@
 #
 # Zabbix MCP Server
-# Copyright (C) 2026 initMAX s.r.o.
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -142,7 +141,7 @@ _AVAILABLE_CSS_CLASSES: list[tuple[str, str]] = [
 
 
 _SYSTEM_PROMPT = """You are generating a Jinja2 HTML template for a PDF
-monitoring report in the initMAX Zabbix MCP Server. The template will
+monitoring report in the Zabbix MCP Server. The template will
 be rendered by weasyprint under a SandboxedEnvironment. Follow these
 rules strictly:
 

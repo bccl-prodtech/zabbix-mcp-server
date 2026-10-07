@@ -22,7 +22,7 @@ Both methods require:
 ### Step 1: Clone the repository
 
 ```bash
-git clone https://github.com/initMAX/zabbix-mcp-server.git
+git clone https://github.com/bccl-prodtech/zabbix-mcp-server.git
 cd zabbix-mcp-server
 ```
 
@@ -153,7 +153,7 @@ sudo ./deploy/install.sh [COMMAND] [OPTIONS]
 ### Step 1: Clone and configure
 
 ```bash
-git clone https://github.com/initMAX/zabbix-mcp-server.git
+git clone https://github.com/bccl-prodtech/zabbix-mcp-server.git
 cd zabbix-mcp-server
 
 # Create config from example

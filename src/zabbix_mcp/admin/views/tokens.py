@@ -1,6 +1,5 @@
 #
 # Zabbix MCP Server
-# Copyright (C) 2026 initMAX s.r.o.
 #
 
 """MCP Token CRUD views — create, list, edit, revoke, delete."""

@@ -1,6 +1,5 @@
 #
 # Zabbix MCP Server
-# Copyright (C) 2026 initMAX s.r.o.
 #
 
 """Zabbix server views — status, create, edit, delete, test connection."""

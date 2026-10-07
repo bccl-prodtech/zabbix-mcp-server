@@ -1,6 +1,5 @@
 #
 # Zabbix MCP Server
-# Copyright (C) 2026 initMAX s.r.o.
 #
 
 """Report template CRUD views with interactive editor."""
@@ -398,7 +397,7 @@ async def template_preview(request: Request) -> Response:
 
         # Prefer the operator's uploaded logo (config.server.report_logo)
         # so the preview matches what report_generate produces. Fall back
-        # to the bundled initMAX admin logo if nothing is configured or
+        # to the bundled admin logo if nothing is configured or
         # the configured file cannot be read.
         logo_fallback = None
         configured_logo = getattr(admin_app.config.server, "report_logo", None)

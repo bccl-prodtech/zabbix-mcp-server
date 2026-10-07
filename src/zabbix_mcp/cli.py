@@ -1,6 +1,5 @@
 #
 # Zabbix MCP Server
-# Copyright (C) 2026 initMAX s.r.o.
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -134,7 +133,7 @@ def main() -> None:
     port = args.port if args.port is not None else config.server.port
 
     server_names = ", ".join(config.zabbix_servers.keys())
-    logger.info("Zabbix MCP Server v%s — developed by initMAX s.r.o.", __version__)
+    logger.info("Zabbix MCP Server v%s — Times of India", __version__)
     logger.info("Transport: %s | Listening on: %s:%d", transport, host, port)
     logger.info("Zabbix servers: %s", server_names)
 

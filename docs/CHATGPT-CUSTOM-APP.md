@@ -27,7 +27,7 @@ Apps" feature. ChatGPT auto-discovers everything from the
 ## Walkthrough
 
 The flow below was driven end-to-end via Playwright on a live
-deployment at `https://student-postgresql-01.initmax.cz/mcp` so
+deployment at `https://mcp.example.internal/mcp` so
 every screenshot is what you actually see.
 
 ### 1. Open the Custom Apps dialog
@@ -219,7 +219,7 @@ ChatGPT's connector probe seems to follow the same pattern.
 reverse proxy, route them on `:443`. If your `:443` already serves
 something else (like the Zabbix UI), use path-based routing
 (`/mcp`, `/authorize`, `/token`, `/.well-known/...`) - the
-operator's existing setup at student-postgresql-01.initmax.cz
+operator's existing setup at mcp.example.internal
 runs Zabbix on `/` and MCP on `/mcp` + OAuth paths, both via the
 same Apache `<VirtualHost *:443>`.
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #
 # Zabbix MCP Server - User-mode installer (no root required)
-# Copyright (C) 2026 initMAX s.r.o.
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -37,7 +36,7 @@ LOG_DIR="$SCRIPT_DIR/logs"
 PYTHON_BIN=""
 
 # macOS
-PLIST_LABEL="com.initmax.zabbix-mcp-server"
+PLIST_LABEL="com.bccl.zabbix-mcp-server"
 PLIST_FILE="$HOME/Library/LaunchAgents/${PLIST_LABEL}.plist"
 
 # Linux

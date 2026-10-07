@@ -1,6 +1,5 @@
 #
 # Zabbix MCP Server
-# Copyright (C) 2026 initMAX s.r.o.
 #
 # Usage:
 #   cp config.example.toml config.toml   # edit with your Zabbix details

@@ -1,6 +1,5 @@
 {#
   Zabbix MCP Server
-  Copyright (C) 2026 initMAX s.r.o.
   Licensed under the GNU Affero General Public License v3.
   See LICENSE for details.
 #}
@@ -617,7 +616,7 @@ function closeAiModal() {
 // can then refine before generating. Keeps starter templates in one
 // place so adding a new preset is a one-line change.
 var AI_QUICKSTARTS = {
-    'weekly': 'Weekly SRE review report. Start with a title "Weekly SRE Review" and the period (from - to). Then: (1) a large availability gauge showing overall uptime, (2) a summary row with metric cards for total hosts, total events, and average availability, (3) a table of all hosts sorted by event count descending, showing host name, availability percent, and event count, (4) a "Top Problems" section (loop over hosts with event_count > 0). Use initMAX blue as the primary color.',
+    'weekly': 'Weekly SRE review report. Start with a title "Weekly SRE Review" and the period (from - to). Then: (1) a large availability gauge showing overall uptime, (2) a summary row with metric cards for total hosts, total events, and average availability, (3) a table of all hosts sorted by event count descending, showing host name, availability percent, and event count, (4) a "Top Problems" section (loop over hosts with event_count > 0). Use blue as the primary color.',
     'capacity': 'Capacity planning report covering CPU, memory, and disk utilization. Include: (1) title with company name and period, (2) per-metric tables iterating metrics[*].rows showing endpoint / avg / min / max with color-coded bars (green < 60, yellow < 85, red otherwise), (3) an "Attention needed" section flagging any row with avg > 85%. Add a page break before the attention section.',
     'incident': 'Incident postmortem template for a single outage. Sections: (1) Executive summary (1-2 paragraphs placeholder), (2) Affected hosts table using the hosts list, (3) Timeline of events (use total_events count as context - leave a placeholder for manual timeline entry), (4) Impact metrics as big-number cards, (5) Remediation checklist. Serious tone, red accents for "affected" headers.',
     'exec': 'One-page executive summary dashboard. Maximum 5 elements on the page: (1) Big availability gauge at top, (2) Three metric cards in a row: total hosts, total events, availability percent, (3) A single short table with the 5 hosts that had the most events, (4) A colored status banner: green "All systems operational" if availability > 99, yellow "Attention" if between 95 and 99, red "Degraded" below 95. Clean, professional, lots of white space.',

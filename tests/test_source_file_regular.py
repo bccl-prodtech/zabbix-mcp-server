@@ -1,6 +1,5 @@
 #
 # Zabbix MCP Server
-# Copyright (C) 2026 initMAX s.r.o.
 # Licensed under the GNU Affero General Public License v3.
 # See LICENSE for details.
 #
